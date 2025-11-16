@@ -105,6 +105,39 @@
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
       display: none;
     }
+    .preview {
+      margin-top: 0.5rem;
+      font-size: 0.78rem;
+      color: #4b5563;
+      background: #f9fafb;
+      border-radius: 0.5rem;
+      border: 1px solid #e5e7eb;
+      padding: 0.5rem;
+      max-height: 120px;
+      overflow: auto;
+    }
+    .progress-wrapper {
+      margin-top: 0.4rem;
+      display: none;
+    }
+    .progress-bar-bg {
+      width: 100%;
+      height: 6px;
+      border-radius: 9999px;
+      background: #e5e7eb;
+      overflow: hidden;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      width: 0%;
+      background: #2563eb;
+      transition: width 0.15s linear;
+    }
+    .progress-text {
+      margin-top: 0.2rem;
+      font-size: 0.75rem;
+      color: #4b5563;
+    }
     .table-container {
       width: 100%;
       overflow-x: auto;
@@ -143,6 +176,48 @@
       flex-wrap: wrap;
       gap: 0.5rem;
       margin-bottom: 0.5rem;
+    }
+    .summary {
+      margin-bottom: 0.5rem;
+      display: none;
+    }
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 0.5rem;
+    }
+    .summary-item {
+      background: #f9fafb;
+      border-radius: 0.5rem;
+      padding: 0.4rem 0.6rem;
+      border: 1px solid #e5e7eb;
+      font-size: 0.78rem;
+    }
+    .summary-label {
+      color: #6b7280;
+      display: block;
+    }
+    .summary-value {
+      font-weight: 600;
+      color: #111827;
+    }
+    .filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem 1rem;
+      align-items: center;
+      margin-bottom: 0.5rem;
+    }
+    .filters span {
+      font-size: 0.75rem;
+      color: #6b7280;
+    }
+    .filters label {
+      font-size: 0.78rem;
+      margin-bottom: 0;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
     }
     .overlay {
       position: fixed;
@@ -213,6 +288,15 @@
           <button id="cancelButton" class="btn-danger" disabled>Cancelar análisis</button>
         </div>
         <div id="status" class="small"></div>
+
+        <div id="progressWrapper" class="progress-wrapper">
+          <div class="progress-bar-bg">
+            <div id="progressBar" class="progress-bar-fill"></div>
+          </div>
+          <div id="progressText" class="progress-text"></div>
+        </div>
+
+        <div id="preview" class="preview" style="display:none;"></div>
         <div id="log" class="log"></div>
       </div>
     </div>
@@ -221,13 +305,41 @@
       <div class="card">
         <div class="actions-bar">
           <h2 style="margin:0;">Resultados</h2>
-          <button id="downloadCsv" class="btn-secondary">Descargar CSV</button>
+          <div style="display:flex; gap:0.4rem; flex-wrap:wrap;">
+            <button id="downloadCsv" class="btn-secondary">Descargar CSV</button>
+            <button id="downloadJson" class="btn-secondary">Descargar JSON</button>
+          </div>
         </div>
-        <div class="small">
-          Cada fila corresponde a un dominio ya normalizado (sin https://, sin ; finales, sin comodines *.).<br />
-          Los valores indican presencia (“OK”), ausencia (“No”) o no disponible (“N/D”).
+
+        <div id="summary" class="summary">
+          <div class="summary-grid">
+            <div class="summary-item">
+              <span class="summary-label">Dominios analizados</span>
+              <span id="summaryTotal" class="summary-value">0</span>
+            </div>
+            <div class="summary-item">
+              <span class="summary-label">Sitios que funcionan</span>
+              <span id="summarySiteOk" class="summary-value">0 (0%)</span>
+            </div>
+            <div class="summary-item">
+              <span class="summary-label">Con IPv6</span>
+              <span id="summaryIPv6" class="summary-value">0 (0%)</span>
+            </div>
+            <div class="summary-item">
+              <span class="summary-label">Con DMARC</span>
+              <span id="summaryDMARC" class="summary-value">0 (0%)</span>
+            </div>
+          </div>
         </div>
-        <div class="table-container" style="margin-top:0.75rem;">
+
+        <div class="filters">
+          <span>Filtros rápidos:</span>
+          <label><input type="checkbox" id="filterNoIPv4" /> Sin IPv4</label>
+          <label><input type="checkbox" id="filterSiteProblem" /> Sitio no funciona</label>
+          <label><input type="checkbox" id="filterNoDMARC" /> Sin DMARC</label>
+        </div>
+
+        <div class="table-container" style="margin-top:0.25rem;">
           <table id="resultsTable">
             <thead>
               <tr>
@@ -275,6 +387,22 @@
     const fileButton = document.getElementById('fileButton');
     const fileNameLabel = document.getElementById('fileName');
     const downloadCsvButton = document.getElementById('downloadCsv');
+    const downloadJsonButton = document.getElementById('downloadJson');
+
+    const progressWrapper = document.getElementById('progressWrapper');
+    const progressBar = document.getElementById('progressBar');
+    const progressText = document.getElementById('progressText');
+
+    const previewEl = document.getElementById('preview');
+    const summaryEl = document.getElementById('summary');
+    const summaryTotalEl = document.getElementById('summaryTotal');
+    const summarySiteOkEl = document.getElementById('summarySiteOk');
+    const summaryIPv6El = document.getElementById('summaryIPv6');
+    const summaryDMARCEl = document.getElementById('summaryDMARC');
+
+    const filterNoIPv4 = document.getElementById('filterNoIPv4');
+    const filterSiteProblem = document.getElementById('filterSiteProblem');
+    const filterNoDMARC = document.getElementById('filterNoDMARC');
 
     const confirmOverlay = document.getElementById('confirmOverlay');
     const confirmCancelYes = document.getElementById('confirmCancelYes');
@@ -289,11 +417,39 @@
       fileInput.click();
     });
 
-    fileInput.addEventListener('change', () => {
+    fileInput.addEventListener('change', async () => {
       if (fileInput.files && fileInput.files[0]) {
-        fileNameLabel.textContent = fileInput.files[0].name;
+        const file = fileInput.files[0];
+        fileNameLabel.textContent = file.name;
+
+        try {
+          const text = await file.text();
+          const lines = text.split(/\r?\n/);
+          const domains = Array.from(new Set(
+            lines
+              .map(normalizeDomain)
+              .filter(d => d.length > 0)
+          ));
+          if (domains.length === 0) {
+            previewEl.style.display = 'block';
+            previewEl.textContent = 'No se encontraron dominios válidos en el archivo.';
+          } else {
+            const previewList = domains.slice(0, 10).join('\n');
+            previewEl.style.display = 'block';
+            previewEl.textContent =
+              `Dominios detectados: ${domains.length}.` +
+              (domains.length > 10
+                ? ` Mostrando los primeros 10:\n` + previewList
+                : `\n` + previewList);
+          }
+        } catch (e) {
+          previewEl.style.display = 'block';
+          previewEl.textContent = 'No se pudo leer el archivo para la vista previa.';
+        }
       } else {
         fileNameLabel.textContent = 'Sin archivo';
+        previewEl.style.display = 'none';
+        previewEl.textContent = '';
       }
     });
 
@@ -381,7 +537,7 @@
                       dnsrecords.records.AAAA.length > 0;
 
       const dnssecOK = dnssecurity && dnssecurity.valid === true;
-      const rpkiOK   = rpki && rpki.state === 'valid' || rpki && rpki.valid === true;
+      const rpkiOK   = (rpki && rpki.state === 'valid') || (rpki && rpki.valid === true);
 
       const spfOK   = emailconfig && emailconfig.spf === true;
       const dmarcOK = emailconfig && emailconfig.dmarc === true;
@@ -399,7 +555,7 @@
         w3cOK = w3c.errors === 0;
       }
 
-      // Interpretar headers para HTTPS 200 y sitio funciona
+      // Interpretar headers para HTTPS 200 y sitio funciona (dominio y www)
       let anyHeaders = false;
       let anyHttpsTrue = false;
       let anySiteTrue = false;
@@ -472,7 +628,74 @@
       fileInput.disabled = active;
       fileButton.disabled = active;
       singleDomainInput.disabled = active;
+      progressWrapper.style.display = active ? 'block' : 'none';
+      if (!active) {
+        progressBar.style.width = '0%';
+        progressText.textContent = '';
+      }
     }
+
+    function updateProgress(current, total) {
+      if (!total || total <= 0) return;
+      const pct = Math.round((current / total) * 100);
+      progressBar.style.width = pct + '%';
+      progressText.textContent = `Progreso: ${current} de ${total} dominios (${pct}%)`;
+    }
+
+    function updateSummary() {
+      const total = allResults.length;
+      if (!total) {
+        summaryEl.style.display = 'none';
+        summaryTotalEl.textContent = '0';
+        summarySiteOkEl.textContent = '0 (0%)';
+        summaryIPv6El.textContent = '0 (0%)';
+        summaryDMARCEl.textContent = '0 (0%)';
+        return;
+      }
+      let siteOkCount = 0;
+      let ipv6Count = 0;
+      let dmarcCount = 0;
+
+      for (const r of allResults) {
+        if (r.siteOK === true) siteOkCount++;
+        if (r.hasIPv6 === true) ipv6Count++;
+        if (r.dmarcOK === true) dmarcCount++;
+      }
+
+      function pct(count) {
+        return Math.round((count / total) * 100);
+      }
+
+      summaryEl.style.display = 'block';
+      summaryTotalEl.textContent = String(total);
+      summarySiteOkEl.textContent = `${siteOkCount} (${pct(siteOkCount)}%)`;
+      summaryIPv6El.textContent = `${ipv6Count} (${pct(ipv6Count)}%)`;
+      summaryDMARCEl.textContent = `${dmarcCount} (${pct(dmarcCount)}%)`;
+    }
+
+    function applyFilters() {
+      const noIPv4 = filterNoIPv4.checked;
+      const siteProblem = filterSiteProblem.checked;
+      const noDMARC = filterNoDMARC.checked;
+
+      const rows = resultsBody.querySelectorAll('tr');
+      rows.forEach((tr, idx) => {
+        const r = allResults[idx];
+        if (!r) {
+          tr.style.display = '';
+          return;
+        }
+        let visible = true;
+        if (noIPv4 && r.hasIPv4 !== false) visible = false;
+        if (siteProblem && !(r.siteOK === false)) visible = false;
+        if (noDMARC && r.dmarcOK !== false) visible = false;
+        tr.style.display = visible ? '' : 'none';
+      });
+    }
+
+    filterNoIPv4.addEventListener('change', applyFilters);
+    filterSiteProblem.addEventListener('change', applyFilters);
+    filterNoDMARC.addEventListener('change', applyFilters);
 
     runButton.addEventListener('click', async () => {
       if (isAnalyzing) return;
@@ -482,6 +705,10 @@
       resultsBody.innerHTML = '';
       allResults = [];
       cancelRequested = false;
+      updateSummary();
+      applyFilters();
+      previewEl.style.display = 'none';
+      previewEl.textContent = '';
 
       const single = normalizeDomain(singleDomainInput.value);
       const file = fileInput.files[0];
@@ -518,6 +745,7 @@
         }
         const d = domains[i];
         log(`▶ Analizando ${d} (${i + 1}/${domains.length})...`);
+        updateProgress(i, domains.length);
         try {
           const result = await analyzeDomain(d);
           appendResultRow(result);
@@ -543,6 +771,10 @@
           allResults.push(emptyResult);
         }
       }
+
+      updateProgress(domains.length, domains.length);
+      updateSummary();
+      applyFilters();
 
       if (cancelRequested) {
         statusEl.textContent = 'Análisis cancelado.';
@@ -627,6 +859,23 @@
       const a = document.createElement('a');
       a.href = url;
       a.download = 'mediciones_isoc_lac.csv';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    });
+
+    downloadJsonButton.addEventListener('click', () => {
+      if (!allResults.length) {
+        alert('No hay resultados para exportar.');
+        return;
+      }
+      const jsonContent = JSON.stringify(allResults, null, 2);
+      const blob = new Blob([jsonContent], { type: 'application/json;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'mediciones_isoc_lac.json';
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
