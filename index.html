@@ -146,7 +146,10 @@
       </p>
     </div>
 
-    <button id="runButton">Analizar</button>
+    <div style="display:flex; gap:0.75rem; flex-wrap:wrap;">
+      <button id="runButton">Analizar</button>
+      <button id="cancelButton" disabled>Cancelar análisis</button>
+    </div>
     <div id="status" class="small"></div>
     <div id="log" class="log" style="display:none;"></div>
   </div>
@@ -184,6 +187,7 @@
 
   <script>
     const runButton = document.getElementById('runButton');
+    const cancelButton = document.getElementById('cancelButton');
     const statusEl  = document.getElementById('status');
     const logEl     = document.getElementById('log');
     const resultsBody = document.getElementById('resultsBody');
@@ -191,7 +195,7 @@
     const fileInput = document.getElementById('fileInput');
     const downloadCsvButton = document.getElementById('downloadCsvButton');
     const allResults = [];
-
+    let cancelRequested = false;
 
     function log(msg) {
       logEl.style.display = 'block';
@@ -200,7 +204,21 @@
     }
 
     function normalizeDomain(d) {
-      return d.trim().toLowerCase();
+      if (!d) return '';
+      // quitar espacios en blanco
+      let domain = d.trim().toLowerCase();
+      // eliminar protocolo si viene con http:// o https://
+      domain = domain.replace(/^https?:\/\//, '');
+      // eliminar todo después de una barra / (ruta)
+      const slashIndex = domain.indexOf('/');
+      if (slashIndex !== -1) {
+        domain = domain.substring(0, slashIndex);
+      }
+      // eliminar caracteres finales comunes que rompen el análisis (; , espacio)
+      domain = domain.replace(/[;,\s]+$/, '');
+      // eliminar espacios extra en medio
+      domain = domain.replace(/\s+/g, '');
+      return domain;
     }
 
     async function analyzeDomain(domain) {
@@ -298,6 +316,7 @@
     }
 
     runButton.addEventListener('click', async () => {
+      cancelRequested = false;
       statusEl.textContent = '';
       logEl.textContent = '';
       logEl.style.display = 'none';
@@ -326,8 +345,13 @@
 
       statusEl.textContent = `Analizando ${domains.length} dominio(s)...`;
       runButton.disabled = true;
+      cancelButton.disabled = false;
 
       for (let i = 0; i < domains.length; i++) {
+        if (cancelRequested) {
+          log('⏹ Análisis cancelado por el usuario.');
+          break;
+        }
         const d = domains[i];
         log(`▶ Analizando ${d} (${i + 1}/${domains.length})...`);
         try {
@@ -351,8 +375,16 @@
         }
       }
 
-      statusEl.textContent = 'Análisis completado.';
+      statusEl.textContent = cancelRequested ? 'Análisis cancelado.' : 'Análisis completado.';
       runButton.disabled = false;
+      cancelButton.disabled = true;
+    });
+
+    cancelButton.addEventListener('click', () => {
+      if (!runButton.disabled) return;
+      cancelRequested = true;
+      statusEl.textContent = 'Cancelando análisis después del dominio actual...';
+      log('Solicitud de cancelación recibida. Se detendrá tras el dominio en curso.');
     });
 
     downloadCsvButton.addEventListener('click', () => {
