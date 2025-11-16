@@ -256,10 +256,20 @@
       border-radius: 0.5rem;
       font-size: 0.8rem;
       color: #1e1b4b;
+      display: none;
     }
     .contact-box {
       margin-top: 0.75rem;
       text-align: right;
+    }
+
+    .note-toggle-row {
+      margin-top: 0.75rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
     }
   </style>
 </head>
@@ -374,7 +384,14 @@
           </table>
         </div>
 
-        <div class="note-box">
+        <div class="note-toggle-row">
+          <span>Información sobre la herramienta:</span>
+          <button id="toggleNoteBtn" class="btn-primary">
+            VERSION EXPERIMENTAL (ver más)
+          </button>
+        </div>
+
+        <div id="noteBox" class="note-box">
           <b>Nota sobre esta versión experimental:</b><br>
           Esta herramienta analiza únicamente el dominio ingresado (y su variante <i>www</i>).
           Los resultados se basan en consultas técnicas directas al dominio evaluado y
@@ -438,6 +455,8 @@
     const confirmOverlay = document.getElementById('confirmOverlay');
     const confirmCancelYes = document.getElementById('confirmCancelYes');
     const confirmCancelContinue = document.getElementById('confirmCancelContinue');
+    const toggleNoteBtn = document.getElementById('toggleNoteBtn');
+    const noteBox = document.getElementById('noteBox');
 
     let cancelRequested = false;
     let isAnalyzing = false;
@@ -912,6 +931,19 @@
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
     });
+
+    // Toggle nota versión experimental
+    if (toggleNoteBtn && noteBox) {
+      noteBox.style.display = 'none';
+      toggleNoteBtn.addEventListener('click', () => {
+        const isHidden = noteBox.style.display === '' || noteBox.style.display === 'none';
+        noteBox.style.display = isHidden ? 'block' : 'none';
+        toggleNoteBtn.textContent = isHidden
+          ? 'VERSION EXPERIMENTAL (ver menos)'
+          : 'VERSION EXPERIMENTAL (ver más)';
+      });
+    }
+
   </script>
 </body>
 </html>
