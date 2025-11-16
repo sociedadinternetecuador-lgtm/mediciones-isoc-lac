@@ -271,91 +271,33 @@
       gap: 0.5rem;
       flex-wrap: wrap;
     }
-  
-    .lang-toggle {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.35rem;
-      padding: 0.25rem 0.6rem;
-      border-radius: 9999px;
-      border: 1px solid #d1d5db;
-      background: #ffffff;
-      font-size: 0.8rem;
-      cursor: pointer;
-      color: #374151;
-    }
-    .lang-toggle span.code {
-      font-weight: 600;
-    }
-    .flag {
-      width: 18px;
-      height: 12px;
-      border-radius: 2px;
-      overflow: hidden;
-      background-size: cover;
-      background-position: center;
-    }
-    .flag-ec {
-      background-image: linear-gradient(
-        to bottom,
-        #fcd116 0 50%,
-        #003893 50% 75%,
-        #ce1126 75% 100%
-      );
-    }
-    .flag-us {
-      background-image: linear-gradient(
-        to bottom,
-        #b22234 0 7.7%,
-        #b22234 7.7% 15.4%,
-        #ffffff 15.4% 23.1%,
-        #ffffff 23.1% 30.8%,
-        #b22234 30.8% 38.5%,
-        #b22234 38.5% 46.2%,
-        #ffffff 46.2% 53.9%,
-        #ffffff 53.9% 61.6%,
-        #b22234 61.6% 69.3%,
-        #b22234 69.3% 77%,
-        #ffffff 77% 84.7%,
-        #ffffff 84.7% 92.4%,
-        #b22234 92.4% 100%
-      );
-    }
-</style>
+  </style>
 </head>
 <body>
-    <header style="margin-bottom: 0.75rem;">
-    <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:0.75rem;">
-      <div>
-        <h1 id="titleMain">Mediciones ISOC LAC</h1>
-        <div class="subtitle" id="subtitleMain">Herramienta experimental para revisión rápida de dominios.</div>
-        <div class="note" id="noteMain">
-          Válido para cualquier dominio (incluidos dominios de 3er y 4to nivel).
-        </div>
-      </div>
-      <button id="langToggle" type="button" class="lang-toggle" title="Cambiar idioma">
-        <span id="langCode" class="code">ES</span>
-        <span id="langFlag" class="flag flag-ec"></span>
-      </button>
+  <header style="margin-bottom: 0.75rem;">
+    <h1>Mediciones ISOC LAC</h1>
+    <div class="subtitle">Herramienta experimental para revisión rápida de dominios.</div>
+    <div class="note">
+      Válido para cualquier dominio (incluidos dominios de 3er y 4to nivel).
     </div>
   </header>
 
   <div class="layout">
     <div class="left-column">
       <div class="card">
-        <h2 id="leftTitle">Entrada</h2>
-        <label for="singleDomain" id="labelSingleDomain">Dominio único</label>
+        <h2>Entrada</h2>
+        <label for="singleDomain">Dominio único</label>
         <input id="singleDomain" type="text"
                placeholder="Ej: presidencia.gob.ec, example.com, gobierno.cl" />
 
         <div style="margin-top:0.75rem">
-          <label for="fileInput" id="labelFile">O archivo .txt (un dominio por línea)</label>
+          <label for="fileInput">O archivo .txt (un dominio por línea)</label>
           <div class="file-row">
             <button id="fileButton" type="button" class="btn-secondary">Seleccionar archivo</button>
             <span id="fileName" class="file-name">Sin archivo</span>
             <input id="fileInput" type="file" accept=".txt" />
           </div>
-          <p class="small" id="fileHelp">
+          <p class="small">
             El sistema limpiará formatos básicos (http(s)://, barras, espacios, ; , y comodines *.).<br />
             Ejemplo de archivo:<br />
             presidencia.gob.ec<br />
@@ -385,7 +327,7 @@
     <div class="right-column">
       <div class="card">
         <div class="actions-bar">
-          <h2 id="rightTitle" style="margin:0;">Resultados</h2>
+          <h2 style="margin:0;">Resultados</h2>
           <div style="display:flex; gap:0.4rem; flex-wrap:wrap;">
             <button id="downloadCsv" class="btn-secondary">Descargar CSV</button>
             <button id="downloadJson" class="btn-secondary">Descargar JSON</button>
@@ -395,26 +337,26 @@
         <div id="summary" class="summary">
           <div class="summary-grid">
             <div class="summary-item">
-              <span class="summary-label" id="summaryLabelTotal">Dominios analizados</span>
+              <span class="summary-label">Dominios analizados</span>
               <span id="summaryTotal" class="summary-value">0</span>
             </div>
             <div class="summary-item">
-              <span class="summary-label" id="summaryLabelSiteOk">Sitios que funcionan</span>
+              <span class="summary-label">Sitios que funcionan</span>
               <span id="summarySiteOk" class="summary-value">0 (0%)</span>
             </div>
             <div class="summary-item">
-              <span class="summary-label" id="summaryLabelIPv6">Con IPv6</span>
+              <span class="summary-label">Con IPv6</span>
               <span id="summaryIPv6" class="summary-value">0 (0%)</span>
             </div>
             <div class="summary-item">
-              <span class="summary-label" id="summaryLabelDMARC">Con DMARC</span>
+              <span class="summary-label">Con DMARC</span>
               <span id="summaryDMARC" class="summary-value">0 (0%)</span>
             </div>
           </div>
         </div>
 
         <div class="filters">
-          <span id="filtersLabel">Filtros rápidos:</span>
+          <span>Filtros rápidos:</span>
           <label><input type="checkbox" id="filterNoIPv4" /> Sin IPv4</label>
           <label><input type="checkbox" id="filterSiteProblem" /> Sitio no funciona</label>
           <label><input type="checkbox" id="filterNoDMARC" /> Sin DMARC</label>
@@ -424,7 +366,7 @@
           <table id="resultsTable">
             <thead>
               <tr>
-                <th id="thDomain">Dominio</th>
+                <th>Dominio</th>
                 <th>IPv4</th>
                 <th>IPv6</th>
                 <th>DNSSEC</th>
@@ -435,7 +377,7 @@
                 <th>HTTP sec.</th>
                 <th>W3C</th>
                 <th>HTTPS 200</th>
-                <th id="thSiteWorks">Sitio funciona</th>
+                <th>Sitio funciona</th>
               </tr>
             </thead>
             <tbody id="resultsBody"></tbody>
@@ -443,16 +385,26 @@
         </div>
 
         <div class="note-toggle-row">
-          <span id="infoToolText">Información sobre la herramienta:</span>
+          <span>Información sobre la herramienta:</span>
           <button id="toggleNoteBtn" class="btn-primary">
             VERSION EXPERIMENTAL (ver más)
           </button>
         </div>
 
-        <div id="noteBox" class="note-box" style="display:none;"></div>
+        <div id="noteBox" class="note-box">
+          <b>Nota sobre esta versión experimental:</b><br>
+          Esta herramienta analiza únicamente el dominio ingresado (y su variante <i>www</i>).
+          Los resultados se basan en consultas técnicas directas al dominio evaluado y
+          <b>no siguen redirecciones hacia otros dominios</b>, ni verifican configuraciones externas
+          como servicios de correo alojados en otros nombres. Por esta razón, algunos dominios
+          pueden aparecer como “No” o “N/D” aunque su sitio final funcione correctamente o sus
+          servicios estén configurados en otro subdominio o proveedor.<br><br>
+          Los datos deben interpretarse como una <b>aproximación técnica inicial</b>, no como una
+          verificación exhaustiva del estado completo del dominio o de su infraestructura.
+        </div>
 
         <div class="contact-box">
-          <button id="contactBtn" class="btn-primary" onclick="location.href='mailto:sociedadinternetecuador@gmail.com'">
+          <button class="btn-primary" onclick="location.href='mailto:sociedadinternetecuador@gmail.com'">
             PROBLEMAS / SUGERENCIAS
           </button>
         </div>
@@ -462,7 +414,7 @@
 
   <div id="confirmOverlay" class="overlay">
     <div class="modal">
-      <div class="modal-text" id="modalText">
+      <div class="modal-text">
         Esto cancelará el análisis en marcha. ¿Está seguro?
       </div>
       <div class="modal-buttons">
@@ -473,20 +425,6 @@
   </div>
 
   <script>
-    const runButton = document.getElementById('runButton');
-    const cancelButton = document.getElementById('cancelButton');
-    const statusEl  = document.getElementById('status');
-    const logEl     = document.getElementById('log');
-    const resultsBody = document.getElementById('resultsBody');
-    const singleDomainInput = document.getElementById('singleDomain');
-    const fileInput = document.getElementById('fileInput');
-    const fileButton = document.getElementById('fileButton');
-    const fileNameLabel = document.getElementById('fileName');
-    const downloadCsvButton = document.getElementById('downloadCsv');
-    const downloadJsonButton = document.getElementById('downloadJson');
-
-    const progressWrapper = document.getElementById('progressWrapper');
-    co<script>
     const runButton = document.getElementById('runButton');
     const cancelButton = document.getElementById('cancelButton');
     const statusEl  = document.getElementById('status');
@@ -520,207 +458,6 @@
     const toggleNoteBtn = document.getElementById('toggleNoteBtn');
     const noteBox = document.getElementById('noteBox');
 
-    const langToggle = document.getElementById('langToggle');
-    const langCode = document.getElementById('langCode');
-    const langFlag = document.getElementById('langFlag');
-
-    const titleMain = document.getElementById('titleMain');
-    const subtitleMain = document.getElementById('subtitleMain');
-    const noteMain = document.getElementById('noteMain');
-    const leftTitle = document.getElementById('leftTitle');
-    const rightTitle = document.getElementById('rightTitle');
-    const labelSingleDomain = document.getElementById('labelSingleDomain');
-    const labelFile = document.getElementById('labelFile');
-    const fileHelp = document.getElementById('fileHelp');
-    const filtersLabel = document.getElementById('filtersLabel');
-    const labelNoIPv4 = document.getElementById('labelNoIPv4');
-    const labelSiteProblemText = document.getElementById('labelSiteProblem');
-    const labelNoDMARCText = document.getElementById('labelNoDMARC');
-    const infoToolText = document.getElementById('infoToolText');
-    const modalText = document.getElementById('modalText');
-    const contactBtn = document.getElementById('contactBtn');
-    const thDomain = document.getElementById('thDomain');
-    const thSiteWorks = document.getElementById('thSiteWorks');
-
-    let currentLang = 'es';
-
-    const I18N = {
-      es: {
-        code: 'ES',
-        flagClass: 'flag-ec',
-        titleMain: 'Mediciones ISOC LAC',
-        subtitleMain: 'Herramienta experimental para revisión rápida de dominios.',
-        noteMain: 'Válido para cualquier dominio (incluidos dominios de 3er y 4to nivel).',
-        leftTitle: 'Entrada',
-        rightTitle: 'Resultados',
-        singleDomainLabel: 'Dominio único',
-        singleDomainPlaceholder: 'Ej: presidencia.gob.ec, example.com, gobierno.cl',
-        fileLabel: 'O archivo .txt (un dominio por línea)',
-        fileButton: 'Seleccionar archivo',
-        fileNone: 'Sin archivo',
-        fileHelp: 'El sistema limpiará formatos básicos (http(s)://, barras, espacios, ; , y comodines *.).\nEjemplo de archivo:\npresidencia.gob.ec\nhttps://aduana.gob.ec;\n*.registrocivil.gob.ec',
-        fileNoValid: 'No se encontraron dominios válidos en el archivo.',
-        filePreviewPrefix: 'Dominios detectados: ',
-        filePreviewMore: ' Mostrando los primeros 10:',
-        fileReadError: 'No se pudo leer el archivo para la vista previa.',
-        statusNoInput: 'Escribe un dominio o selecciona un archivo .txt.',
-        statusNoValidAfterClean: 'No se encontraron dominios válidos después de limpiar el archivo.',
-        statusAnalyzing: n => `Analizando ${n} dominio(s)...`,
-        statusCanceled: 'Análisis cancelado.',
-        statusCompleted: 'Análisis completado.',
-        progressText: (c, t, p) => `Progreso: ${c} de ${t} dominios (${p}%)`,
-        filtersLabel: 'Filtros rápidos:',
-        noIPv4: 'Sin IPv4',
-        siteProblem: 'Sitio no funciona',
-        noDMARC: 'Sin DMARC',
-        btnRun: 'Analizar',
-        btnCancel: 'Cancelar análisis',
-        btnCsv: 'Descargar CSV',
-        btnJson: 'Descargar JSON',
-        modalText: 'Esto cancelará el análisis en marcha. ¿Está seguro?',
-        modalContinue: 'CONTINUAR',
-        modalYesCancel: 'SI CANCELA',
-        noteToggleMore: 'VERSION EXPERIMENTAL (ver más)',
-        noteToggleLess: 'VERSION EXPERIMENTAL (ver menos)',
-        infoTool: 'Información sobre la herramienta:',
-        contactBtn: 'PROBLEMAS / SUGERENCIAS',
-        noResultsExport: 'No hay resultados para exportar.',
-        logCancelUserHtml: '<strong>⏹ Análisis cancelado por el usuario.</strong>',
-        thDomain: 'Dominio',
-        thSiteWorks: 'Sitio funciona',
-        noteHtml: `<b>Nota sobre esta versión experimental:</b><br>
-          Esta herramienta analiza únicamente el dominio ingresado (y su variante <i>www</i>).
-          Los resultados se basan en consultas técnicas directas al dominio evaluado y
-          <b>no siguen redirecciones hacia otros dominios</b>, ni verifican configuraciones externas
-          como servicios de correo alojados en otros nombres. Por esta razón, algunos dominios
-          pueden aparecer como “No” o “N/D” aunque su sitio final funcione correctamente o sus
-          servicios estén configurados en otro subdominio o proveedor.<br><br>
-          Los datos deben interpretarse como una <b>aproximación técnica inicial</b>, no como una
-          verificación exhaustiva del estado completo del dominio o de su infraestructura.`
-      },
-      en: {
-        code: 'EN',
-        flagClass: 'flag-us',
-        titleMain: 'ISOC LAC Measurements',
-        subtitleMain: 'Experimental tool for quick domain review.',
-        noteMain: 'Valid for any domain (including 3rd and 4th level domains).',
-        leftTitle: 'Input',
-        rightTitle: 'Results',
-        singleDomainLabel: 'Single domain',
-        singleDomainPlaceholder: 'E.g.: presidencia.gob.ec, example.com, gobierno.cl',
-        fileLabel: 'Or .txt file (one domain per line)',
-        fileButton: 'Select file',
-        fileNone: 'No file',
-        fileHelp: 'The system will clean basic formats (http(s)://, slashes, spaces, ; , and *.).\nFile example:\npresidencia.gob.ec\nhttps://aduana.gob.ec;\n*.registrocivil.gob.ec',
-        fileNoValid: 'No valid domains were found in the file.',
-        filePreviewPrefix: 'Detected domains: ',
-        filePreviewMore: ' Showing the first 10:',
-        fileReadError: 'The file could not be read for preview.',
-        statusNoInput: 'Type a domain or select a .txt file.',
-        statusNoValidAfterClean: 'No valid domains were found after cleaning the file.',
-        statusAnalyzing: n => `Analyzing ${n} domain(s)...`,
-        statusCanceled: 'Analysis cancelled.',
-        statusCompleted: 'Analysis completed.',
-        progressText: (c, t, p) => `Progress: ${c} of ${t} domains (${p}%)`,
-        filtersLabel: 'Quick filters:',
-        noIPv4: 'No IPv4',
-        siteProblem: 'Site not working',
-        noDMARC: 'No DMARC',
-        btnRun: 'Analyze',
-        btnCancel: 'Cancel analysis',
-        btnCsv: 'Download CSV',
-        btnJson: 'Download JSON',
-        modalText: 'This will cancel the running analysis. Are you sure?',
-        modalContinue: 'CONTINUE',
-        modalYesCancel: 'YES, CANCEL',
-        noteToggleMore: 'EXPERIMENTAL VERSION (see more)',
-        noteToggleLess: 'EXPERIMENTAL VERSION (see less)',
-        infoTool: 'About this tool:',
-        contactBtn: 'ISSUES / SUGGESTIONS',
-        noResultsExport: 'There are no results to export.',
-        logCancelUserHtml: '<strong>⏹ Analysis cancelled by the user.</strong>',
-        thDomain: 'Domain',
-        thSiteWorks: 'Site works',
-        noteHtml: `<b>Note on this experimental version:</b><br>
-          This tool only analyzes the domain you enter (and its <i>www</i> variant).
-          Results are based on technical checks performed directly on that domain and
-          <b>do not follow redirects to other domains</b>, nor do they verify external configurations
-          such as mail services hosted under different names. Because of this, some domains
-          may appear as “No” or “N/D” even if the final website works correctly or their
-          services are configured on another subdomain or provider.<br><br>
-          The data should be understood as an <b>initial technical approximation</b>, not as an
-          exhaustive verification of the full state of the domain or its infrastructure.`
-      }
-    };
-
-    function applyLang() {
-      const t = I18N[currentLang];
-
-      document.documentElement.lang = currentLang;
-
-      if (langCode && langFlag) {
-        langCode.textContent = t.code;
-        langFlag.className = 'flag ' + t.flagClass;
-      }
-
-      if (titleMain) titleMain.textContent = t.titleMain;
-      if (subtitleMain) subtitleMain.textContent = t.subtitleMain;
-      if (noteMain) noteMain.textContent = t.noteMain;
-
-      if (leftTitle) leftTitle.textContent = t.leftTitle;
-      if (rightTitle) rightTitle.textContent = t.rightTitle;
-
-      if (labelSingleDomain) labelSingleDomain.textContent = t.singleDomainLabel;
-      if (singleDomainInput) singleDomainInput.placeholder = t.singleDomainPlaceholder;
-
-      if (labelFile) labelFile.textContent = t.fileLabel;
-      if (fileButton) fileButton.textContent = t.fileButton;
-      if (fileNameLabel && !fileInput.files[0]) fileNameLabel.textContent = t.fileNone;
-
-      if (fileHelp) fileHelp.innerText = t.fileHelp.replace(/\n/g, '\n');
-
-      if (runButton) runButton.textContent = t.btnRun;
-      if (cancelButton) cancelButton.textContent = t.btnCancel;
-
-      if (downloadCsvButton) downloadCsvButton.textContent = t.btnCsv;
-      if (downloadJsonButton) downloadJsonButton.textContent = t.btnJson;
-
-      if (filtersLabel) filtersLabel.textContent = t.filtersLabel;
-      if (labelNoIPv4) labelNoIPv4.textContent = t.noIPv4;
-      if (labelSiteProblemText) labelSiteProblemText.textContent = t.siteProblem;
-      if (labelNoDMARCText) labelNoDMARCText.textContent = t.noDMARC;
-
-      if (infoToolText) infoToolText.textContent = t.infoTool;
-      if (modalText) modalText.textContent = t.modalText;
-      if (confirmCancelContinue) confirmCancelContinue.textContent = t.modalContinue;
-      if (confirmCancelYes) confirmCancelYes.textContent = t.modalYesCancel;
-
-      if (contactBtn) contactBtn.textContent = t.contactBtn;
-
-      if (thDomain) thDomain.textContent = t.thDomain;
-      if (thSiteWorks) thSiteWorks.textContent = t.thSiteWorks;
-
-      const noteBoxEl = document.getElementById('noteBox');
-      if (noteBoxEl) {
-        noteBoxEl.innerHTML = t.noteHtml;
-      }
-
-      if (toggleNoteBtn) {
-        const isHidden = noteBoxEl && (noteBoxEl.style.display === '' || noteBoxEl.style.display === 'none');
-        toggleNoteBtn.textContent = isHidden ? t.noteToggleMore : t.noteToggleLess;
-      }
-    }
-
-    if (langToggle) {
-      langToggle.addEventListener('click', () => {
-        currentLang = currentLang === 'es' ? 'en' : 'es';
-        applyLang();
-      });
-      applyLang();
-    }
-
-
-
     let cancelRequested = false;
     let isAnalyzing = false;
     let allResults = [];
@@ -745,7 +482,7 @@
           ));
           if (domains.length === 0) {
             previewEl.style.display = 'block';
-            previewEl.textContent = I18N[currentLang].fileNoValid;
+            previewEl.textContent = 'No se encontraron dominios válidos en el archivo.';
           } else {
             const previewList = domains.slice(0, 10).join('\n');
             previewEl.style.display = 'block';
@@ -757,31 +494,23 @@
           }
         } catch (e) {
           previewEl.style.display = 'block';
-          previewEl.textContent = I18N[currentLang].fileReadError;
+          previewEl.textContent = 'No se pudo leer el archivo para la vista previa.';
         }
       } else {
-        fileNameLabel.textContent = I18N[currentLang].fileNone;
+        fileNameLabel.textContent = 'Sin archivo';
         previewEl.style.display = 'none';
         previewEl.textContent = '';
       }
     });
 
-    function log(msg, isHtml = false) {
-      if (!logEl.innerHTML) logEl.style.display = 'block';
-      if (isHtml) {
-        logEl.innerHTML += msg + '<br>';
-      } else {
-        const escaped = String(msg)
-          .replace(/&/g, '&amp;')
-          .replace(/</g, '&lt;')
-          .replace(/>/g, '&gt;');
-        logEl.innerHTML += escaped + '<br>';
-      }
+    function log(msg) {
+      if (!logEl.textContent) logEl.style.display = 'block';
+      logEl.textContent += msg + "\n";
       logEl.scrollTop = logEl.scrollHeight;
     }
 
     function resetLog() {
-      logEl.innerHTML = '';
+      logEl.textContent = '';
       logEl.style.display = 'none';
     }
 
@@ -949,8 +678,6 @@
       fileInput.disabled = active;
       fileButton.disabled = active;
       singleDomainInput.disabled = active;
-      if (downloadCsvButton) downloadCsvButton.disabled = active;
-      if (downloadJsonButton) downloadJsonButton.disabled = active;
       progressWrapper.style.display = active ? 'block' : 'none';
       if (!active) {
         progressBar.style.width = '0%';
@@ -962,7 +689,7 @@
       if (!total || total <= 0) return;
       const pct = Math.round((current / total) * 100);
       progressBar.style.width = pct + '%';
-      progressText.textContent = I18N[currentLang].progressText(current, total, pct);
+      progressText.textContent = `Progreso: ${current} de ${total} dominios (${pct}%)`;
     }
 
     function updateSummary() {
@@ -1047,35 +774,35 @@
       } else if (single) {
         domains = [single];
       } else {
-        statusEl.textContent = I18N[currentLang].statusNoInput;
+        statusEl.textContent = 'Escribe un dominio o selecciona un archivo .txt.';
         return;
       }
 
       domains = Array.from(new Set(domains));
 
       if (!domains.length) {
-        statusEl.textContent = I18N[currentLang].statusNoValidAfterClean;
+        statusEl.textContent = 'No se encontraron dominios válidos después de limpiar el archivo.';
         return;
       }
 
-      statusEl.textContent = I18N[currentLang].statusAnalyzing(domains.length);
+      statusEl.textContent = `Analizando ${domains.length} dominio(s)...`;
       setAnalyzingState(true);
 
       for (let i = 0; i < domains.length; i++) {
         if (cancelRequested) {
-          log(I18N[currentLang].logCancelUserHtml, true);
+          log('⏹ Análisis cancelado por el usuario.');
           break;
         }
         const d = domains[i];
-        log(currentLang === 'es' ? `▶ Analizando ${d} (${i + 1}/${domains.length})...` : `▶ Checking ${d} (${i + 1}/${domains.length})...`);
+        log(`▶ Analizando ${d} (${i + 1}/${domains.length})...`);
         updateProgress(i, domains.length);
         try {
           const result = await analyzeDomain(d);
           appendResultRow(result);
           allResults.push(result);
-          log(currentLang === 'es' ? `✔ Listo ${d}` : `✔ Done ${d}`);
+          log(`✔ Listo ${d}`);
         } catch (e) {
-          log(currentLang === 'es' ? `✖ Error en ${d}: ${e.message || e}` : `✖ Error on ${d}: ${e.message || e}`);
+          log(`✖ Error en ${d}: ${e.message || e}`);
           const emptyResult = {
             domain: d,
             hasIPv4: null,
@@ -1100,14 +827,14 @@
       applyFilters();
 
       if (cancelRequested) {
-        statusEl.innerHTML = '<strong>' + I18N[currentLang].statusCanceled + '</strong>';
+        statusEl.textContent = 'Análisis cancelado.';
       } else {
-        statusEl.textContent = I18N[currentLang].statusCompleted;
+        statusEl.textContent = 'Análisis completado.';
       }
 
       // Limpia el archivo para evitar reusar el mismo listado sin querer
       fileInput.value = '';
-      fileNameLabel.textContent = I18N[currentLang].fileNone;
+      fileNameLabel.textContent = 'Sin archivo';
       setAnalyzingState(false);
       cancelRequested = false;
     });
@@ -1126,12 +853,12 @@
       confirmOverlay.style.display = 'none';
       // limpia el archivo cargado para permitir un nuevo análisis inmediato
       fileInput.value = '';
-      fileNameLabel.textContent = I18N[currentLang].fileNone;
+      fileNameLabel.textContent = 'Sin archivo';
     });
 
     downloadCsvButton.addEventListener('click', () => {
       if (!allResults.length) {
-        alert(I18N[currentLang].noResultsExport);
+        alert('No hay resultados para exportar.');
         return;
       }
       const header = [
@@ -1190,7 +917,7 @@
 
     downloadJsonButton.addEventListener('click', () => {
       if (!allResults.length) {
-        alert(I18N[currentLang].noResultsExport);
+        alert('No hay resultados para exportar.');
         return;
       }
       const jsonContent = JSON.stringify(allResults, null, 2);
@@ -1205,15 +932,18 @@
       URL.revokeObjectURL(url);
     });
 
-    // Toggle nota versión experimental con i18n
+    // Toggle nota versión experimental
     if (toggleNoteBtn && noteBox) {
       noteBox.style.display = 'none';
       toggleNoteBtn.addEventListener('click', () => {
         const isHidden = noteBox.style.display === '' || noteBox.style.display === 'none';
         noteBox.style.display = isHidden ? 'block' : 'none';
-        const t = I18N[currentLang];
-        toggleNoteBtn.textContent = isHidden ? t.noteToggleMore : t.noteToggleLess;
+        toggleNoteBtn.textContent = isHidden
+          ? 'VERSION EXPERIMENTAL (ver menos)'
+          : 'VERSION EXPERIMENTAL (ver más)';
       });
     }
 
   </script>
+</body>
+</html>
