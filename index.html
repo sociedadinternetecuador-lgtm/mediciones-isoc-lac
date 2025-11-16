@@ -272,10 +272,15 @@
       flex-wrap: wrap;
     }
   
-    .lang-toggle {
+    .lang-switch {
       display: inline-flex;
       align-items: center;
-      gap: 0.35rem;
+      gap: 0.4rem;
+    }
+    .lang-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
       padding: 0.25rem 0.6rem;
       border-radius: 9999px;
       border: 1px solid #d1d5db;
@@ -283,18 +288,19 @@
       font-size: 0.8rem;
       cursor: pointer;
       color: #374151;
+      transition: background-color 0.15s ease, border-color 0.15s ease;
     }
-    .lang-toggle span.code {
+    .lang-btn .code {
       font-weight: 600;
     }
-    .flag {
+    .lang-btn .flag {
       font-size: 1rem;
       line-height: 1;
-      display: inline-block;
     }
-    .flag-ec,
-    .flag-us {
-      background-image: none !important;
+    .lang-btn.active {
+      background-color: #e0ecff;
+      border-color: #2563eb;
+      font-weight: 600;
     }
 </style>
 </head>
@@ -308,10 +314,16 @@
           Válido para cualquier dominio (incluidos dominios de 3er y 4to nivel).
         </div>
       </div>
-      <button id="langToggle" type="button" class="lang-toggle" title="Cambiar idioma">
-        <span id="langCode" class="code">ES</span>
-        <span id="langFlag" class="flag flag-ec">🇪🇨</span>
-      </button>
+      <div class="lang-switch" aria-label="Language selector">
+        <button type="button" class="lang-btn active" data-lang="es">
+          <span class="flag">🇪🇨</span>
+          <span class="code">ES</span>
+        </button>
+        <button type="button" class="lang-btn" data-lang="en">
+          <span class="flag">🇺🇸</span>
+          <span class="code">EN</span>
+        </button>
+      </div>
     </div>
   </header>
 
@@ -481,9 +493,7 @@
     const toggleNoteBtn = document.getElementById('toggleNoteBtn');
     const noteBox = document.getElementById('noteBox');
 
-    const langToggle = document.getElementById('langToggle');
-    const langCode = document.getElementById('langCode');
-    const langFlag = document.getElementById('langFlag');
+    const langButtons = document.querySelectorAll('.lang-btn');
 
     const titleMain = document.getElementById('titleMain');
     const subtitleMain = document.getElementById('subtitleMain');
@@ -619,12 +629,6 @@
 
       document.documentElement.lang = currentLang;
 
-      if (langCode && langFlag) {
-        langCode.textContent = t.code;
-        langFlag.className = 'flag ' + t.flagClass;
-        langFlag.textContent = (currentLang === 'es' ? '\U0001F1EA\U0001F1E8' : '\U0001F1FA\U0001F1F8');
-      }
-
       if (titleMain) titleMain.textContent = t.titleMain;
       if (subtitleMain) subtitleMain.textContent = t.subtitleMain;
       if (noteMain) noteMain.textContent = t.noteMain;
@@ -673,15 +677,27 @@
       }
     }
 
-    if (langToggle) {
-      langToggle.addEventListener('click', () => {
-        currentLang = currentLang === 'es' ? 'en' : 'es';
-        applyLang();
+    function updateLangButtons() {
+      if (!langButtons) return;
+      langButtons.forEach((btn) => {
+        const lang = btn.getAttribute('data-lang');
+        btn.classList.toggle('active', lang === currentLang);
       });
-      applyLang();
     }
 
-
+    if (langButtons && langButtons.length) {
+      langButtons.forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const lang = btn.getAttribute('data-lang');
+          if (!lang || lang === currentLang) return;
+          currentLang = lang;
+          applyLang();
+          updateLangButtons();
+        });
+      });
+      applyLang();
+      updateLangButtons();
+    }
 
     let cancelRequested = false;
     let isAnalyzing = false;
