@@ -9,8 +9,8 @@
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       margin: 0;
       padding: 1rem;
-      background: #0f172a;
-      color: #e5e7eb;
+      background: #f5f5f5;
+      color: #111827;
     }
     h1 {
       font-size: 1.5rem;
@@ -21,12 +21,12 @@
       margin-top: 1.5rem;
     }
     .card {
-      background: #020617;
+      background: #ffffff;
       border-radius: 0.75rem;
       padding: 1rem;
       margin-bottom: 1rem;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-      border: 1px solid #1f2937;
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
+      border: 1px solid #e5e7eb;
     }
     label {
       display: block;
@@ -39,7 +39,7 @@
       padding: 0.5rem 0.75rem;
       border-radius: 0.5rem;
       border: 1px solid #4b5563;
-      background: #020617;
+      background: #ffffff;
       color: #f9fafb;
       box-sizing: border-box;
     }
@@ -65,14 +65,19 @@
       font-size: 0.8rem;
       color: #9ca3af;
     }
+    .table-wrapper {
+      width: 100%;
+      overflow-x: auto;
+      margin-top: 0.75rem;
+    }
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 1rem;
+      min-width: 720px;
       font-size: 0.8rem;
     }
     th, td {
-      border: 1px solid #1f2937;
+      border: 1px solid #d1d5db;
       padding: 0.4rem;
       text-align: left;
     }
@@ -83,10 +88,10 @@
       z-index: 1;
     }
     tr:nth-child(even) {
-      background: #020617;
+      background: #ffffff;
     }
     tr:nth-child(odd) {
-      background: #020617;
+      background: #ffffff;
     }
     .ok {
       color: #22c55e;
@@ -103,11 +108,11 @@
     .log {
       max-height: 140px;
       overflow: auto;
-      background: #020617;
+      background: #ffffff;
       border-radius: 0.5rem;
       padding: 0.5rem;
       font-size: 0.75rem;
-      border: 1px solid #1f2937;
+      border: 1px solid #d1d5db;
       margin-top: 0.5rem;
       white-space: pre-wrap;
     }
@@ -118,6 +123,7 @@
   <p class="small">
     Ingresa un dominio o sube un archivo .txt con un dominio por línea. La herramienta usará
     las APIs internas para revisar DNS, DNSSEC, RPKI, correo, seguridad HTTP y accesibilidad.
+    <br><strong>Válido para cualquier dominio (incluidos dominios de 3er y 4to nivel).</strong>
   </p>
 
   <div class="card">
@@ -142,13 +148,17 @@
   </div>
 
   <div class="card">
-    <h2>Resultados</h2>
+    <div style="display:flex; align-items:center; justify-content: space-between; gap: 0.75rem; flex-wrap: wrap;">
+      <h2 style="margin: 0;">Resultados</h2>
+      <button id="downloadCsvButton" style="margin-top:0;">Descargar CSV</button>
+    </div>
     <div class="small">
       Cada fila es un dominio. Las columnas resumen algunas métricas clave. Si necesitas
       más detalle, se puede ampliar la interfaz más adelante.
     </div>
-    <table id="resultsTable">
-      <thead>
+    <div class="table-wrapper">
+      <table id="resultsTable">
+        <thead>
         <tr>
           <th>Dominio</th>
           <th>IPv4</th>
@@ -164,7 +174,8 @@
       </thead>
       <tbody id="resultsBody">
       </tbody>
-    </table>
+      </table>
+    </div>
   </div>
 
   <script>
@@ -174,6 +185,9 @@
     const resultsBody = document.getElementById('resultsBody');
     const singleDomainInput = document.getElementById('singleDomain');
     const fileInput = document.getElementById('fileInput');
+    const downloadCsvButton = document.getElementById('downloadCsvButton');
+    const allResults = [];
+
 
     function log(msg) {
       logEl.style.display = 'block';
@@ -262,6 +276,7 @@
     }
 
     function appendResultRow(result) {
+      allResults.push(result);
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td>${result.domain}</td>
@@ -283,6 +298,7 @@
       logEl.textContent = '';
       logEl.style.display = 'none';
       resultsBody.innerHTML = '';
+      allResults.length = 0;
 
       const single = normalizeDomain(singleDomainInput.value);
       const file = fileInput.files[0];
@@ -334,6 +350,59 @@
       statusEl.textContent = 'Análisis completado.';
       runButton.disabled = false;
     });
+
+    downloadCsvButton.addEventListener('click', () => {
+      if (!allResults.length) {
+        alert('No hay resultados para descargar todavía.');
+        return;
+      }
+      const headers = [
+        'Dominio',
+        'IPv4',
+        'IPv6',
+        'DNSSEC',
+        'RPKI',
+        'SPF',
+        'DMARC',
+        'DKIM',
+        'HTTP_sec',
+        'W3C'
+      ];
+      function valToText(v) {
+        if (v === true) return 'OK';
+        if (v === false) return 'No';
+        return 'N/D';
+      }
+      const rows = allResults.map(r => [
+        r.domain,
+        valToText(r.hasIPv4),
+        valToText(r.hasIPv6),
+        valToText(r.dnssecOK),
+        valToText(r.rpkiOK),
+        valToText(r.spfOK),
+        valToText(r.dmarcOK),
+        valToText(r.dkimOK),
+        valToText(r.httpOK),
+        valToText(r.w3cOK)
+      ]);
+      const csvLines = [
+        headers.join(','),
+        ...rows.map(row => row.map(field => {
+          const safe = ('' + field).replace(/"/g, '""');
+          return `"${safe}"`;
+        }).join(','))
+      ];
+      const blob = new Blob([csvLines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'mediciones_isoc_lac.csv';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    });
+
   </script>
 </body>
 </html>
