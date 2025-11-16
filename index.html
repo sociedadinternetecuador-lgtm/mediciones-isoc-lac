@@ -21,7 +21,7 @@
     .layout { display: flex; flex-direction: column; gap: 1rem; }
     @media (min-width: 900px) {
       .layout { flex-direction: row; align-items: flex-start; }
-      .left-column { flex: 0 0 360px; }
+      .left-column { flex: 0 0 380px; }
       .right-column { flex: 1; }
     }
     .card {
@@ -47,7 +47,18 @@
       font-size: 0.9rem;
     }
     input[type="text"]::placeholder { color: #9ca3af; }
-    input[type="file"] { margin-top: 0.35rem; font-size: 0.85rem; }
+    input[type="file"] { display: none; }
+    .file-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-top: 0.35rem;
+      flex-wrap: wrap;
+    }
+    .file-name {
+      font-size: 0.8rem;
+      color: #6b7280;
+    }
     .small { font-size: 0.8rem; color: #6b7280; }
     .buttons-row {
       display: flex;
@@ -105,7 +116,7 @@
       width: 100%;
       border-collapse: collapse;
       font-size: 0.8rem;
-      min-width: 760px;
+      min-width: 780px;
     }
     th, td {
       padding: 0.45rem 0.5rem;
@@ -183,7 +194,11 @@
 
         <div style="margin-top:0.75rem">
           <label for="fileInput">O archivo .txt (un dominio por línea)</label>
-          <input id="fileInput" type="file" accept=".txt" />
+          <div class="file-row">
+            <button id="fileButton" type="button" class="btn-secondary">Seleccionar archivo</button>
+            <span id="fileName" class="file-name">Sin archivo</span>
+            <input id="fileInput" type="file" accept=".txt" />
+          </div>
           <p class="small">
             El sistema limpiará formatos básicos (http(s)://, barras, espacios, ; , y comodines *.).<br />
             Ejemplo de archivo:<br />
@@ -257,6 +272,8 @@
     const resultsBody = document.getElementById('resultsBody');
     const singleDomainInput = document.getElementById('singleDomain');
     const fileInput = document.getElementById('fileInput');
+    const fileButton = document.getElementById('fileButton');
+    const fileNameLabel = document.getElementById('fileName');
     const downloadCsvButton = document.getElementById('downloadCsv');
 
     const confirmOverlay = document.getElementById('confirmOverlay');
@@ -266,6 +283,19 @@
     let cancelRequested = false;
     let isAnalyzing = false;
     let allResults = [];
+
+    fileButton.addEventListener('click', () => {
+      if (isAnalyzing) return;
+      fileInput.click();
+    });
+
+    fileInput.addEventListener('change', () => {
+      if (fileInput.files && fileInput.files[0]) {
+        fileNameLabel.textContent = fileInput.files[0].name;
+      } else {
+        fileNameLabel.textContent = 'Sin archivo';
+      }
+    });
 
     function log(msg) {
       if (!logEl.textContent) logEl.style.display = 'block';
@@ -320,6 +350,8 @@
         }
       }
 
+      const wwwDomain = domain.startsWith('www.') ? domain : 'www.' + domain;
+
       const [
         dnsrecords,
         dnssecurity,
@@ -327,7 +359,8 @@
         emailconfig,
         httpsecurity,
         w3c,
-        headersRes
+        headersMain,
+        headersWww
       ] = await Promise.all([
         safeFetch('/dnsrecords/' + encodeURIComponent(domain)),
         safeFetch('/dnssecurity/' + encodeURIComponent(domain)),
@@ -335,7 +368,8 @@
         safeFetch('/emailconfig/' + encodeURIComponent(domain)),
         safeFetch('/httpsecurity/' + encodeURIComponent(domain)),
         safeFetch('/w3c/' + encodeURIComponent(domain)),
-        safeFetch('/headers/' + encodeURIComponent(domain))
+        safeFetch('/headers/' + encodeURIComponent(domain)),
+        safeFetch('/headers/' + encodeURIComponent(wwwDomain))
       ]);
 
       const hasIPv4 = dnsrecords && dnsrecords.records &&
@@ -347,7 +381,7 @@
                       dnsrecords.records.AAAA.length > 0;
 
       const dnssecOK = dnssecurity && dnssecurity.valid === true;
-      const rpkiOK   = rpki && rpki.valid === true;
+      const rpkiOK   = rpki && rpki.state === 'valid' || rpki && rpki.valid === true;
 
       const spfOK   = emailconfig && emailconfig.spf === true;
       const dmarcOK = emailconfig && emailconfig.dmarc === true;
@@ -365,11 +399,26 @@
         w3cOK = w3c.errors === 0;
       }
 
+      // Interpretar headers para HTTPS 200 y sitio funciona
+      let anyHeaders = false;
+      let anyHttpsTrue = false;
+      let anySiteTrue = false;
+
+      function considerHeaders(h) {
+        if (!h || h.error) return;
+        anyHeaders = true;
+        if (h.https === true) anyHttpsTrue = true;
+        if (h.https === true || h.redirect === true) anySiteTrue = true;
+      }
+
+      considerHeaders(headersMain);
+      considerHeaders(headersWww);
+
       let https200 = null;
       let siteOK = null;
-      if (headersRes && !headersRes.error) {
-        https200 = headersRes.https === true;
-        siteOK = !!(headersRes.https === true || headersRes.redirect === true);
+      if (anyHeaders) {
+        https200 = anyHttpsTrue;
+        siteOK = anySiteTrue;
       }
 
       return {
@@ -421,6 +470,7 @@
       runButton.disabled = active;
       cancelButton.disabled = !active;
       fileInput.disabled = active;
+      fileButton.disabled = active;
       singleDomainInput.disabled = active;
     }
 
@@ -502,6 +552,7 @@
 
       // Limpia el archivo para evitar reusar el mismo listado sin querer
       fileInput.value = '';
+      fileNameLabel.textContent = 'Sin archivo';
       setAnalyzingState(false);
       cancelRequested = false;
     });
@@ -520,6 +571,7 @@
       confirmOverlay.style.display = 'none';
       // limpia el archivo cargado para permitir un nuevo análisis inmediato
       fileInput.value = '';
+      fileNameLabel.textContent = 'Sin archivo';
     });
 
     downloadCsvButton.addEventListener('click', () => {
