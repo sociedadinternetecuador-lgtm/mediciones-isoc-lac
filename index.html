@@ -5,12 +5,8 @@
   <title>Mediciones ISOC LAC</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    :root {
-      color-scheme: light;
-    }
-    * {
-      box-sizing: border-box;
-    }
+    :root { color-scheme: light; }
+    * { box-sizing: border-box; }
     body {
       margin: 0;
       padding: 1rem;
@@ -18,42 +14,15 @@
       background: #f3f4f6;
       color: #111827;
     }
-    h1 {
-      font-size: 1.6rem;
-      margin: 0 0 0.25rem 0;
-      color: #0f172a;
-    }
-    h2 {
-      font-size: 1.1rem;
-      margin: 0 0 0.75rem 0;
-      color: #111827;
-    }
-    .subtitle {
-      font-size: 0.85rem;
-      color: #4b5563;
-      margin-bottom: 0.25rem;
-    }
-    .note {
-      font-size: 0.8rem;
-      color: #2563eb;
-      margin-bottom: 0.75rem;
-    }
-    .layout {
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-    }
+    h1 { font-size: 1.6rem; margin: 0 0 0.25rem 0; color: #0f172a; }
+    h2 { font-size: 1.1rem; margin: 0 0 0.75rem 0; color: #111827; }
+    .subtitle { font-size: 0.85rem; color: #4b5563; margin-bottom: 0.25rem; }
+    .note { font-size: 0.8rem; color: #2563eb; margin-bottom: 0.75rem; }
+    .layout { display: flex; flex-direction: column; gap: 1rem; }
     @media (min-width: 900px) {
-      .layout {
-        flex-direction: row;
-        align-items: flex-start;
-      }
-      .left-column {
-        flex: 0 0 360px;
-      }
-      .right-column {
-        flex: 1;
-      }
+      .layout { flex-direction: row; align-items: flex-start; }
+      .left-column { flex: 0 0 360px; }
+      .right-column { flex: 1; }
     }
     .card {
       background: #ffffff;
@@ -77,17 +46,9 @@
       color: #111827;
       font-size: 0.9rem;
     }
-    input[type="text"]::placeholder {
-      color: #9ca3af;
-    }
-    input[type="file"] {
-      margin-top: 0.35rem;
-      font-size: 0.85rem;
-    }
-    .small {
-      font-size: 0.8rem;
-      color: #6b7280;
-    }
+    input[type="text"]::placeholder { color: #9ca3af; }
+    input[type="file"] { margin-top: 0.35rem; font-size: 0.85rem; }
+    .small { font-size: 0.8rem; color: #6b7280; }
     .buttons-row {
       display: flex;
       flex-wrap: wrap;
@@ -107,14 +68,8 @@
       gap: 0.35rem;
       white-space: nowrap;
     }
-    button:disabled {
-      opacity: 0.6;
-      cursor: default;
-    }
-    .btn-primary {
-      background: #2563eb;
-      color: #ffffff;
-    }
+    button:disabled { opacity: 0.6; cursor: default; }
+    .btn-primary { background: #2563eb; color: #ffffff; }
     .btn-secondary {
       background: #f3f4f6;
       color: #374151;
@@ -125,10 +80,7 @@
       color: #b91c1c;
       border: 1px solid #fecaca;
     }
-    #status {
-      margin-top: 0.35rem;
-      min-height: 1.1em;
-    }
+    #status { margin-top: 0.35rem; min-height: 1.1em; }
     .log {
       margin-top: 0.5rem;
       max-height: 160px;
@@ -140,6 +92,7 @@
       border: 1px solid #e5e7eb;
       white-space: pre-wrap;
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      display: none;
     }
     .table-container {
       width: 100%;
@@ -152,7 +105,7 @@
       width: 100%;
       border-collapse: collapse;
       font-size: 0.8rem;
-      min-width: 640px;
+      min-width: 760px;
     }
     th, td {
       padding: 0.45rem 0.5rem;
@@ -167,24 +120,11 @@
       color: #111827;
       font-weight: 600;
     }
-    tr:nth-child(even) td {
-      background: #f9fafb;
-    }
-    tr:nth-child(odd) td {
-      background: #ffffff;
-    }
-    .ok {
-      color: #15803d;
-      font-weight: 600;
-    }
-    .bad {
-      color: #b91c1c;
-      font-weight: 600;
-    }
-    .warn {
-      color: #92400e;
-      font-weight: 600;
-    }
+    tr:nth-child(even) td { background: #f9fafb; }
+    tr:nth-child(odd) td { background: #ffffff; }
+    .ok { color: #15803d; font-weight: 600; }
+    .bad { color: #b91c1c; font-weight: 600; }
+    .warn { color: #92400e; font-weight: 600; }
     .actions-bar {
       display: flex;
       justify-content: space-between;
@@ -238,7 +178,8 @@
       <div class="card">
         <h2>Entrada</h2>
         <label for="singleDomain">Dominio único</label>
-        <input id="singleDomain" type="text" placeholder="Ej: presidencia.gob.ec, example.com, gobierno.cl" />
+        <input id="singleDomain" type="text"
+               placeholder="Ej: presidencia.gob.ec, example.com, gobierno.cl" />
 
         <div style="margin-top:0.75rem">
           <label for="fileInput">O archivo .txt (un dominio por línea)</label>
@@ -257,7 +198,7 @@
           <button id="cancelButton" class="btn-danger" disabled>Cancelar análisis</button>
         </div>
         <div id="status" class="small"></div>
-        <div id="log" class="log" style="display:none;"></div>
+        <div id="log" class="log"></div>
       </div>
     </div>
 
@@ -285,10 +226,11 @@
                 <th>DKIM</th>
                 <th>HTTP sec.</th>
                 <th>W3C</th>
+                <th>HTTPS 200</th>
+                <th>Sitio funciona</th>
               </tr>
             </thead>
-            <tbody id="resultsBody">
-            </tbody>
+            <tbody id="resultsBody"></tbody>
           </table>
         </div>
       </div>
@@ -326,7 +268,7 @@
     let allResults = [];
 
     function log(msg) {
-      logEl.style.display = 'block';
+      if (!logEl.textContent) logEl.style.display = 'block';
       logEl.textContent += msg + "\n";
       logEl.scrollTop = logEl.scrollHeight;
     }
@@ -340,23 +282,28 @@
       if (!d) return '';
       let s = String(d).trim().toLowerCase();
       if (!s) return '';
+
       // cortar en el primer separador fuerte (; , espacio, tab)
       s = s.split(/[;,\s]+/)[0];
+
       // quitar esquema http(s)
       s = s.replace(/^https?:\/\//, '');
+
       // quitar ruta si existe
       const slashIndex = s.indexOf('/');
       if (slashIndex !== -1) {
         s = s.slice(0, slashIndex);
       }
+
       // quitar comodín *.
       if (s.startsWith('*.')) {
         s = s.slice(2);
       }
-      // quitar puntos iniciales redundantes
+
+      // quitar puntos iniciales redundantes y finales
       s = s.replace(/^\.+/, '');
-      // quitar puntos finales
       s = s.replace(/\.+$/, '');
+
       return s;
     }
 
@@ -379,22 +326,28 @@
         rpki,
         emailconfig,
         httpsecurity,
-        w3c
+        w3c,
+        headersRes
       ] = await Promise.all([
         safeFetch('/dnsrecords/' + encodeURIComponent(domain)),
         safeFetch('/dnssecurity/' + encodeURIComponent(domain)),
         safeFetch('/rpki/' + encodeURIComponent(domain)),
         safeFetch('/emailconfig/' + encodeURIComponent(domain)),
         safeFetch('/httpsecurity/' + encodeURIComponent(domain)),
-        safeFetch('/w3c/' + encodeURIComponent(domain))
+        safeFetch('/w3c/' + encodeURIComponent(domain)),
+        safeFetch('/headers/' + encodeURIComponent(domain))
       ]);
 
-      const hasIPv4 = dnsrecords && dnsrecords.records && Array.isArray(dnsrecords.records.A) && dnsrecords.records.A.length > 0;
-      const hasIPv6 = dnsrecords && dnsrecords.records && Array.isArray(dnsrecords.records.AAAA) && dnsrecords.records.AAAA.length > 0;
+      const hasIPv4 = dnsrecords && dnsrecords.records &&
+                      Array.isArray(dnsrecords.records.A) &&
+                      dnsrecords.records.A.length > 0;
+
+      const hasIPv6 = dnsrecords && dnsrecords.records &&
+                      Array.isArray(dnsrecords.records.AAAA) &&
+                      dnsrecords.records.AAAA.length > 0;
 
       const dnssecOK = dnssecurity && dnssecurity.valid === true;
-
-      const rpkiOK = rpki && rpki.valid === true;
+      const rpkiOK   = rpki && rpki.valid === true;
 
       const spfOK   = emailconfig && emailconfig.spf === true;
       const dmarcOK = emailconfig && emailconfig.dmarc === true;
@@ -412,6 +365,13 @@
         w3cOK = w3c.errors === 0;
       }
 
+      let https200 = null;
+      let siteOK = null;
+      if (headersRes && !headersRes.error) {
+        https200 = headersRes.https === true;
+        siteOK = !!(headersRes.https === true || headersRes.redirect === true);
+      }
+
       return {
         domain,
         hasIPv4,
@@ -422,7 +382,9 @@
         dmarcOK,
         dkimOK,
         httpOK,
-        w3cOK
+        w3cOK,
+        https200,
+        siteOK
       };
     }
 
@@ -448,6 +410,8 @@
         <td>${resultCell(result.dkimOK)}</td>
         <td>${resultCell(result.httpOK)}</td>
         <td>${resultCell(result.w3cOK)}</td>
+        <td>${resultCell(result.https200)}</td>
+        <td>${resultCell(result.siteOK)}</td>
       `;
       resultsBody.appendChild(tr);
     }
@@ -461,6 +425,8 @@
     }
 
     runButton.addEventListener('click', async () => {
+      if (isAnalyzing) return;
+
       statusEl.textContent = '';
       resetLog();
       resultsBody.innerHTML = '';
@@ -519,7 +485,9 @@
             dmarcOK: null,
             dkimOK: null,
             httpOK: null,
-            w3cOK: null
+            w3cOK: null,
+            https200: null,
+            siteOK: null
           };
           appendResultRow(emptyResult);
           allResults.push(emptyResult);
@@ -550,7 +518,7 @@
     confirmCancelYes.addEventListener('click', () => {
       cancelRequested = true;
       confirmOverlay.style.display = 'none';
-      // limpiar archivo para permitir un nuevo análisis inmediato
+      // limpia el archivo cargado para permitir un nuevo análisis inmediato
       fileInput.value = '';
     });
 
@@ -569,13 +537,17 @@
         'DMARC',
         'DKIM',
         'HTTP_sec',
-        'W3C'
+        'W3C',
+        'HTTPS_200',
+        'Sitio_funciona'
       ];
       const rows = [header.join(',')];
+
       function val(v) {
         if (v === null || typeof v === 'undefined') return 'N/D';
         return v ? 'OK' : 'No';
       }
+
       for (const r of allResults) {
         rows.push([
           r.domain,
@@ -591,9 +563,12 @@
             ? 'N/D'
             : r.w3cOK
             ? 'OK'
-            : 'No'
+            : 'No',
+          val(r.https200),
+          val(r.siteOK)
         ].join(','));
       }
+
       const csvContent = rows.join('\n');
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
