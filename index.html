@@ -1,2 +1,339 @@
 <!DOCTYPE html>
-<html><body><h1>placeholder</h1></body></html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Mediciones ISOC LAC</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      margin: 0;
+      padding: 1rem;
+      background: #0f172a;
+      color: #e5e7eb;
+    }
+    h1 {
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+    h2 {
+      font-size: 1.1rem;
+      margin-top: 1.5rem;
+    }
+    .card {
+      background: #020617;
+      border-radius: 0.75rem;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      border: 1px solid #1f2937;
+    }
+    label {
+      display: block;
+      font-size: 0.9rem;
+      margin-bottom: 0.25rem;
+      color: #9ca3af;
+    }
+    input[type="text"] {
+      width: 100%;
+      padding: 0.5rem 0.75rem;
+      border-radius: 0.5rem;
+      border: 1px solid #4b5563;
+      background: #020617;
+      color: #f9fafb;
+      box-sizing: border-box;
+    }
+    input[type="file"] {
+      margin-top: 0.25rem;
+      color: #e5e7eb;
+    }
+    button {
+      margin-top: 0.75rem;
+      padding: 0.5rem 1rem;
+      border-radius: 9999px;
+      border: none;
+      background: #22c55e;
+      color: #022c22;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    button:disabled {
+      opacity: 0.6;
+      cursor: default;
+    }
+    .small {
+      font-size: 0.8rem;
+      color: #9ca3af;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+      font-size: 0.8rem;
+    }
+    th, td {
+      border: 1px solid #1f2937;
+      padding: 0.4rem;
+      text-align: left;
+    }
+    th {
+      background: #111827;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+    tr:nth-child(even) {
+      background: #020617;
+    }
+    tr:nth-child(odd) {
+      background: #020617;
+    }
+    .ok {
+      color: #22c55e;
+      font-weight: 600;
+    }
+    .bad {
+      color: #ef4444;
+      font-weight: 600;
+    }
+    .warn {
+      color: #eab308;
+      font-weight: 600;
+    }
+    .log {
+      max-height: 140px;
+      overflow: auto;
+      background: #020617;
+      border-radius: 0.5rem;
+      padding: 0.5rem;
+      font-size: 0.75rem;
+      border: 1px solid #1f2937;
+      margin-top: 0.5rem;
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+  <h1>Mediciones ISOC LAC</h1>
+  <p class="small">
+    Ingresa un dominio o sube un archivo .txt con un dominio por línea. La herramienta usará
+    las APIs internas para revisar DNS, DNSSEC, RPKI, correo, seguridad HTTP y accesibilidad.
+  </p>
+
+  <div class="card">
+    <h2>Entrada</h2>
+    <label for="singleDomain">Dominio único</label>
+    <input id="singleDomain" type="text" placeholder="ej. ejemplo.gob.ec" />
+
+    <div style="margin-top:0.75rem">
+      <label for="fileInput">O archivo .txt (un dominio por línea)</label>
+      <input id="fileInput" type="file" accept=".txt" />
+      <p class="small">
+        Se ignorarán líneas vacías. Ejemplo de archivo:<br />
+        midominio.ec<br />
+        presidencia.gob.ec<br />
+        ejemplo.com.ec
+      </p>
+    </div>
+
+    <button id="runButton">Analizar</button>
+    <div id="status" class="small"></div>
+    <div id="log" class="log" style="display:none;"></div>
+  </div>
+
+  <div class="card">
+    <h2>Resultados</h2>
+    <div class="small">
+      Cada fila es un dominio. Las columnas resumen algunas métricas clave. Si necesitas
+      más detalle, se puede ampliar la interfaz más adelante.
+    </div>
+    <table id="resultsTable">
+      <thead>
+        <tr>
+          <th>Dominio</th>
+          <th>IPv4</th>
+          <th>IPv6</th>
+          <th>DNSSEC</th>
+          <th>RPKI</th>
+          <th>SPF</th>
+          <th>DMARC</th>
+          <th>DKIM</th>
+          <th>HTTP sec.</th>
+          <th>W3C</th>
+        </tr>
+      </thead>
+      <tbody id="resultsBody">
+      </tbody>
+    </table>
+  </div>
+
+  <script>
+    const runButton = document.getElementById('runButton');
+    const statusEl  = document.getElementById('status');
+    const logEl     = document.getElementById('log');
+    const resultsBody = document.getElementById('resultsBody');
+    const singleDomainInput = document.getElementById('singleDomain');
+    const fileInput = document.getElementById('fileInput');
+
+    function log(msg) {
+      logEl.style.display = 'block';
+      logEl.textContent += msg + "\n";
+      logEl.scrollTop = logEl.scrollHeight;
+    }
+
+    function normalizeDomain(d) {
+      return d.trim().toLowerCase();
+    }
+
+    async function analyzeDomain(domain) {
+      const base = '';
+
+      async function safeFetch(path) {
+        try {
+          const res = await fetch(base + path);
+          if (!res.ok) throw new Error('HTTP ' + res.status);
+          return await res.json();
+        } catch (e) {
+          return { error: e.message || 'error' };
+        }
+      }
+
+      const [
+        dnsrecords,
+        dnssecurity,
+        rpki,
+        emailconfig,
+        httpsecurity,
+        w3c
+      ] = await Promise.all([
+        safeFetch('/dnsrecords/' + encodeURIComponent(domain)),
+        safeFetch('/dnssecurity/' + encodeURIComponent(domain)),
+        safeFetch('/rpki/' + encodeURIComponent(domain)),
+        safeFetch('/emailconfig/' + encodeURIComponent(domain)),
+        safeFetch('/httpsecurity/' + encodeURIComponent(domain)),
+        safeFetch('/w3c/' + encodeURIComponent(domain))
+      ]);
+
+      const hasIPv4 = dnsrecords && dnsrecords.records && Array.isArray(dnsrecords.records.A) && dnsrecords.records.A.length > 0;
+      const hasIPv6 = dnsrecords && dnsrecords.records && Array.isArray(dnsrecords.records.AAAA) && dnsrecords.records.AAAA.length > 0;
+
+      const dnssecOK = dnssecurity && dnssecurity.valid === true;
+
+      const rpkiOK = rpki && rpki.valid === true;
+
+      const spfOK   = emailconfig && emailconfig.spf === true;
+      const dmarcOK = emailconfig && emailconfig.dmarc === true;
+      const dkimOK  = emailconfig && emailconfig.dkim === true;
+
+      const httpOK = httpsecurity && httpsecurity.security &&
+                     (httpsecurity.security.hsts ||
+                      httpsecurity.security.csp ||
+                      httpsecurity.security.xfo ||
+                      httpsecurity.security.xcto ||
+                      httpsecurity.security.xxss);
+
+      let w3cOK = null;
+      if (w3c && typeof w3c.errors === 'number') {
+        w3cOK = w3c.errors === 0;
+      }
+
+      return {
+        domain,
+        hasIPv4,
+        hasIPv6,
+        dnssecOK,
+        rpkiOK,
+        spfOK,
+        dmarcOK,
+        dkimOK,
+        httpOK,
+        w3cOK,
+        raw: { dnsrecords, dnssecurity, rpki, emailconfig, httpsecurity, w3c }
+      };
+    }
+
+    function resultCell(okValue) {
+      if (okValue === null || typeof okValue === 'undefined') {
+        return '<span class="warn">N/D</span>';
+      }
+      return okValue
+        ? '<span class="ok">OK</span>'
+        : '<span class="bad">No</span>';
+    }
+
+    function appendResultRow(result) {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${result.domain}</td>
+        <td>${resultCell(result.hasIPv4)}</td>
+        <td>${resultCell(result.hasIPv6)}</td>
+        <td>${resultCell(result.dnssecOK)}</td>
+        <td>${resultCell(result.rpkiOK)}</td>
+        <td>${resultCell(result.spfOK)}</td>
+        <td>${resultCell(result.dmarcOK)}</td>
+        <td>${resultCell(result.dkimOK)}</td>
+        <td>${resultCell(result.httpOK)}</td>
+        <td>${resultCell(result.w3cOK)}</td>
+      `;
+      resultsBody.appendChild(tr);
+    }
+
+    runButton.addEventListener('click', async () => {
+      statusEl.textContent = '';
+      logEl.textContent = '';
+      logEl.style.display = 'none';
+      resultsBody.innerHTML = '';
+
+      const single = normalizeDomain(singleDomainInput.value);
+      const file = fileInput.files[0];
+
+      let domains = [];
+
+      if (file) {
+        const text = await file.text();
+        domains = text
+          .split(/\r?\n/)
+          .map(normalizeDomain)
+          .filter(d => d.length > 0);
+      } else if (single) {
+        domains = [single];
+      } else {
+        statusEl.textContent = 'Escribe un dominio o selecciona un archivo .txt.';
+        return;
+      }
+
+      domains = Array.from(new Set(domains));
+
+      statusEl.textContent = `Analizando ${domains.length} dominio(s)...`;
+      runButton.disabled = true;
+
+      for (let i = 0; i < domains.length; i++) {
+        const d = domains[i];
+        log(`▶ Analizando ${d} (${i + 1}/${domains.length})...`);
+        try {
+          const result = await analyzeDomain(d);
+          appendResultRow(result);
+          log(`✔ Listo ${d}`);
+        } catch (e) {
+          log(`✖ Error en ${d}: ${e.message || e}`);
+          appendResultRow({
+            domain: d,
+            hasIPv4: null,
+            hasIPv6: null,
+            dnssecOK: null,
+            rpkiOK: null,
+            spfOK: null,
+            dmarcOK: null,
+            dkimOK: null,
+            httpOK: null,
+            w3cOK: null
+          });
+        }
+      }
+
+      statusEl.textContent = 'Análisis completado.';
+      runButton.disabled = false;
+    });
+  </script>
+</body>
+</html>
