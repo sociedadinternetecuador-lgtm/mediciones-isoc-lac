@@ -1,37 +1,917 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8" />
-<title>Mediciones ISOC LAC</title>
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<style>
-body{font-family:system-ui;-webkit-font-smoothing:antialiased;background:#f5f6f7;margin:0;padding:1rem;color:#111}
-.note-box{margin-top:1rem;background:#eef2ff;border-left:4px solid #4f46e5;padding:0.75rem;border-radius:0.25rem;font-size:0.85rem;color:#1e1b4b}
-.contact-box{margin-top:1rem;text-align:center}
-.contact-box button{background:#2563eb;color:#fff;padding:0.6rem 1rem;border:none;border-radius:6px;font-weight:600;font-size:0.9rem;cursor:pointer}
-.contact-box button:hover{background:#1d4ed8}
-</style>
+  <meta charset="UTF-8" />
+  <title>Mediciones ISOC LAC</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root { color-scheme: light; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 1rem;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f3f4f6;
+      color: #111827;
+    }
+    h1 { font-size: 1.6rem; margin: 0 0 0.25rem 0; color: #0f172a; }
+    h2 { font-size: 1.1rem; margin: 0 0 0.75rem 0; color: #111827; }
+    .subtitle { font-size: 0.85rem; color: #4b5563; margin-bottom: 0.25rem; }
+    .note { font-size: 0.8rem; color: #2563eb; margin-bottom: 0.75rem; }
+    .layout { display: flex; flex-direction: column; gap: 1rem; }
+    @media (min-width: 900px) {
+      .layout { flex-direction: row; align-items: flex-start; }
+      .left-column { flex: 0 0 380px; }
+      .right-column { flex: 1; }
+    }
+    .card {
+      background: #ffffff;
+      border-radius: 0.75rem;
+      padding: 1rem;
+      box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
+      border: 1px solid #e5e7eb;
+    }
+    label {
+      display: block;
+      font-size: 0.85rem;
+      margin-bottom: 0.25rem;
+      color: #374151;
+    }
+    input[type="text"] {
+      width: 100%;
+      padding: 0.5rem 0.75rem;
+      border-radius: 0.5rem;
+      border: 1px solid #d1d5db;
+      background: #ffffff;
+      color: #111827;
+      font-size: 0.9rem;
+    }
+    input[type="text"]::placeholder { color: #9ca3af; }
+    input[type="file"] { display: none; }
+    .file-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-top: 0.35rem;
+      flex-wrap: wrap;
+    }
+    .file-name {
+      font-size: 0.8rem;
+      color: #6b7280;
+    }
+    .small { font-size: 0.8rem; color: #6b7280; }
+    .buttons-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 0.75rem;
+      align-items: center;
+    }
+    button {
+      padding: 0.45rem 0.9rem;
+      border-radius: 9999px;
+      border: none;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      white-space: nowrap;
+    }
+    button:disabled { opacity: 0.6; cursor: default; }
+    .btn-primary { background: #2563eb; color: #ffffff; }
+    .btn-secondary {
+      background: #f3f4f6;
+      color: #374151;
+      border: 1px solid #e5e7eb;
+    }
+    .btn-danger {
+      background: #fee2e2;
+      color: #b91c1c;
+      border: 1px solid #fecaca;
+    }
+    #status { margin-top: 0.35rem; min-height: 1.1em; }
+    .log {
+      margin-top: 0.5rem;
+      max-height: 160px;
+      overflow: auto;
+      background: #f9fafb;
+      border-radius: 0.5rem;
+      padding: 0.5rem;
+      font-size: 0.75rem;
+      border: 1px solid #e5e7eb;
+      white-space: pre-wrap;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      display: none;
+    }
+    .preview {
+      margin-top: 0.5rem;
+      font-size: 0.78rem;
+      color: #4b5563;
+      background: #f9fafb;
+      border-radius: 0.5rem;
+      border: 1px solid #e5e7eb;
+      padding: 0.5rem;
+      max-height: 120px;
+      overflow: auto;
+    }
+    .progress-wrapper {
+      margin-top: 0.4rem;
+      display: none;
+    }
+    .progress-bar-bg {
+      width: 100%;
+      height: 6px;
+      border-radius: 9999px;
+      background: #e5e7eb;
+      overflow: hidden;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      width: 0%;
+      background: #2563eb;
+      transition: width 0.15s linear;
+    }
+    .progress-text {
+      margin-top: 0.2rem;
+      font-size: 0.75rem;
+      color: #4b5563;
+    }
+    .table-container {
+      width: 100%;
+      overflow-x: auto;
+      border-radius: 0.5rem;
+      border: 1px solid #e5e7eb;
+      background: #ffffff;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.8rem;
+      min-width: 780px;
+    }
+    th, td {
+      padding: 0.45rem 0.5rem;
+      text-align: left;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    th {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      background: #e5e7eb;
+      color: #111827;
+      font-weight: 600;
+    }
+    tr:nth-child(even) td { background: #f9fafb; }
+    tr:nth-child(odd) td { background: #ffffff; }
+    .ok { color: #15803d; font-weight: 600; }
+    .bad { color: #b91c1c; font-weight: 600; }
+    .warn { color: #92400e; font-weight: 600; }
+    .actions-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+    .summary {
+      margin-bottom: 0.5rem;
+      display: none;
+    }
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 0.5rem;
+    }
+    .summary-item {
+      background: #f9fafb;
+      border-radius: 0.5rem;
+      padding: 0.4rem 0.6rem;
+      border: 1px solid #e5e7eb;
+      font-size: 0.78rem;
+    }
+    .summary-label {
+      color: #6b7280;
+      display: block;
+    }
+    .summary-value {
+      font-weight: 600;
+      color: #111827;
+    }
+    .filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem 1rem;
+      align-items: center;
+      margin-bottom: 0.5rem;
+    }
+    .filters span {
+      font-size: 0.75rem;
+      color: #6b7280;
+    }
+    .filters label {
+      font-size: 0.78rem;
+      margin-bottom: 0;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.45);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
+    }
+    .modal {
+      background: #ffffff;
+      border-radius: 0.75rem;
+      padding: 1rem;
+      max-width: 360px;
+      width: 90%;
+      box-shadow: 0 20px 40px rgba(15, 23, 42, 0.3);
+      border: 1px solid #e5e7eb;
+    }
+    .modal-text {
+      font-size: 0.9rem;
+      color: #111827;
+      margin-bottom: 0.75rem;
+    }
+    .modal-buttons {
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.5rem;
+      margin-top: 0.25rem;
+    }
+    .note-box {
+      margin-top: 0.75rem;
+      background: #eef2ff;
+      border-left: 4px solid #4f46e5;
+      padding: 0.75rem;
+      border-radius: 0.5rem;
+      font-size: 0.8rem;
+      color: #1e1b4b;
+    }
+    .contact-box {
+      margin-top: 0.75rem;
+      text-align: right;
+    }
+  </style>
 </head>
 <body>
+  <header style="margin-bottom: 0.75rem;">
+    <h1>Mediciones ISOC LAC</h1>
+    <div class="subtitle">Herramienta experimental para revisión rápida de dominios.</div>
+    <div class="note">
+      Válido para cualquier dominio (incluidos dominios de 3er y 4to nivel).
+    </div>
+  </header>
 
-<h1>Mediciones ISOC LAC</h1>
+  <div class="layout">
+    <div class="left-column">
+      <div class="card">
+        <h2>Entrada</h2>
+        <label for="singleDomain">Dominio único</label>
+        <input id="singleDomain" type="text"
+               placeholder="Ej: presidencia.gob.ec, example.com, gobierno.cl" />
 
-<p>⚠️ Esta es una versión demostrativa del archivo. Reemplazaré exactamente el tuyo cuando confirmes estilo.</p>
+        <div style="margin-top:0.75rem">
+          <label for="fileInput">O archivo .txt (un dominio por línea)</label>
+          <div class="file-row">
+            <button id="fileButton" type="button" class="btn-secondary">Seleccionar archivo</button>
+            <span id="fileName" class="file-name">Sin archivo</span>
+            <input id="fileInput" type="file" accept=".txt" />
+          </div>
+          <p class="small">
+            El sistema limpiará formatos básicos (http(s)://, barras, espacios, ; , y comodines *.).<br />
+            Ejemplo de archivo:<br />
+            presidencia.gob.ec<br />
+            https://aduana.gob.ec;<br />
+            *.registrocivil.gob.ec
+          </p>
+        </div>
 
-<div class="note-box">
-<b>Nota sobre esta versión experimental:</b><br>
-Esta herramienta analiza únicamente el dominio ingresado (y su variante <i>www</i>). 
-Los resultados se basan en consultas técnicas directas al dominio evaluado y <b>no siguen redirecciones hacia otros dominios</b>, 
-ni verifican configuraciones externas como servicios de correo alojados en otros nombres. 
-Por esta razón, algunos dominios pueden aparecer como “No” o “N/D” aunque su sitio final funcione correctamente o sus servicios estén configurados en otro subdominio o proveedor.<br><br>
-Los datos deben interpretarse como una <b>aproximación técnica inicial</b>, no como una verificación exhaustiva del estado completo del dominio o de su infraestructura.
-</div>
+        <div class="buttons-row">
+          <button id="runButton" class="btn-primary">Analizar</button>
+          <button id="cancelButton" class="btn-danger" disabled>Cancelar análisis</button>
+        </div>
+        <div id="status" class="small"></div>
 
-<div class="contact-box">
-  <button onclick="location.href='mailto:sociedadinternetecuador@gmail.com'">
-    PROBLEMAS / SUGERENCIAS
-  </button>
-</div>
+        <div id="progressWrapper" class="progress-wrapper">
+          <div class="progress-bar-bg">
+            <div id="progressBar" class="progress-bar-fill"></div>
+          </div>
+          <div id="progressText" class="progress-text"></div>
+        </div>
 
+        <div id="preview" class="preview" style="display:none;"></div>
+        <div id="log" class="log"></div>
+      </div>
+    </div>
+
+    <div class="right-column">
+      <div class="card">
+        <div class="actions-bar">
+          <h2 style="margin:0;">Resultados</h2>
+          <div style="display:flex; gap:0.4rem; flex-wrap:wrap;">
+            <button id="downloadCsv" class="btn-secondary">Descargar CSV</button>
+            <button id="downloadJson" class="btn-secondary">Descargar JSON</button>
+          </div>
+        </div>
+
+        <div id="summary" class="summary">
+          <div class="summary-grid">
+            <div class="summary-item">
+              <span class="summary-label">Dominios analizados</span>
+              <span id="summaryTotal" class="summary-value">0</span>
+            </div>
+            <div class="summary-item">
+              <span class="summary-label">Sitios que funcionan</span>
+              <span id="summarySiteOk" class="summary-value">0 (0%)</span>
+            </div>
+            <div class="summary-item">
+              <span class="summary-label">Con IPv6</span>
+              <span id="summaryIPv6" class="summary-value">0 (0%)</span>
+            </div>
+            <div class="summary-item">
+              <span class="summary-label">Con DMARC</span>
+              <span id="summaryDMARC" class="summary-value">0 (0%)</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="filters">
+          <span>Filtros rápidos:</span>
+          <label><input type="checkbox" id="filterNoIPv4" /> Sin IPv4</label>
+          <label><input type="checkbox" id="filterSiteProblem" /> Sitio no funciona</label>
+          <label><input type="checkbox" id="filterNoDMARC" /> Sin DMARC</label>
+        </div>
+
+        <div class="table-container" style="margin-top:0.25rem;">
+          <table id="resultsTable">
+            <thead>
+              <tr>
+                <th>Dominio</th>
+                <th>IPv4</th>
+                <th>IPv6</th>
+                <th>DNSSEC</th>
+                <th>RPKI</th>
+                <th>SPF</th>
+                <th>DMARC</th>
+                <th>DKIM</th>
+                <th>HTTP sec.</th>
+                <th>W3C</th>
+                <th>HTTPS 200</th>
+                <th>Sitio funciona</th>
+              </tr>
+            </thead>
+            <tbody id="resultsBody"></tbody>
+          </table>
+        </div>
+
+        <div class="note-box">
+          <b>Nota sobre esta versión experimental:</b><br>
+          Esta herramienta analiza únicamente el dominio ingresado (y su variante <i>www</i>).
+          Los resultados se basan en consultas técnicas directas al dominio evaluado y
+          <b>no siguen redirecciones hacia otros dominios</b>, ni verifican configuraciones externas
+          como servicios de correo alojados en otros nombres. Por esta razón, algunos dominios
+          pueden aparecer como “No” o “N/D” aunque su sitio final funcione correctamente o sus
+          servicios estén configurados en otro subdominio o proveedor.<br><br>
+          Los datos deben interpretarse como una <b>aproximación técnica inicial</b>, no como una
+          verificación exhaustiva del estado completo del dominio o de su infraestructura.
+        </div>
+
+        <div class="contact-box">
+          <button class="btn-primary" onclick="location.href='mailto:sociedadinternetecuador@gmail.com'">
+            PROBLEMAS / SUGERENCIAS
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="confirmOverlay" class="overlay">
+    <div class="modal">
+      <div class="modal-text">
+        Esto cancelará el análisis en marcha. ¿Está seguro?
+      </div>
+      <div class="modal-buttons">
+        <button id="confirmCancelContinue" class="btn-secondary">CONTINUAR</button>
+        <button id="confirmCancelYes" class="btn-danger">SI CANCELA</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const runButton = document.getElementById('runButton');
+    const cancelButton = document.getElementById('cancelButton');
+    const statusEl  = document.getElementById('status');
+    const logEl     = document.getElementById('log');
+    const resultsBody = document.getElementById('resultsBody');
+    const singleDomainInput = document.getElementById('singleDomain');
+    const fileInput = document.getElementById('fileInput');
+    const fileButton = document.getElementById('fileButton');
+    const fileNameLabel = document.getElementById('fileName');
+    const downloadCsvButton = document.getElementById('downloadCsv');
+    const downloadJsonButton = document.getElementById('downloadJson');
+
+    const progressWrapper = document.getElementById('progressWrapper');
+    const progressBar = document.getElementById('progressBar');
+    const progressText = document.getElementById('progressText');
+
+    const previewEl = document.getElementById('preview');
+    const summaryEl = document.getElementById('summary');
+    const summaryTotalEl = document.getElementById('summaryTotal');
+    const summarySiteOkEl = document.getElementById('summarySiteOk');
+    const summaryIPv6El = document.getElementById('summaryIPv6');
+    const summaryDMARCEl = document.getElementById('summaryDMARC');
+
+    const filterNoIPv4 = document.getElementById('filterNoIPv4');
+    const filterSiteProblem = document.getElementById('filterSiteProblem');
+    const filterNoDMARC = document.getElementById('filterNoDMARC');
+
+    const confirmOverlay = document.getElementById('confirmOverlay');
+    const confirmCancelYes = document.getElementById('confirmCancelYes');
+    const confirmCancelContinue = document.getElementById('confirmCancelContinue');
+
+    let cancelRequested = false;
+    let isAnalyzing = false;
+    let allResults = [];
+
+    fileButton.addEventListener('click', () => {
+      if (isAnalyzing) return;
+      fileInput.click();
+    });
+
+    fileInput.addEventListener('change', async () => {
+      if (fileInput.files && fileInput.files[0]) {
+        const file = fileInput.files[0];
+        fileNameLabel.textContent = file.name;
+
+        try {
+          const text = await file.text();
+          const lines = text.split(/\r?\n/);
+          const domains = Array.from(new Set(
+            lines
+              .map(normalizeDomain)
+              .filter(d => d.length > 0)
+          ));
+          if (domains.length === 0) {
+            previewEl.style.display = 'block';
+            previewEl.textContent = 'No se encontraron dominios válidos en el archivo.';
+          } else {
+            const previewList = domains.slice(0, 10).join('\n');
+            previewEl.style.display = 'block';
+            previewEl.textContent =
+              `Dominios detectados: ${domains.length}.` +
+              (domains.length > 10
+                ? ` Mostrando los primeros 10:\n` + previewList
+                : `\n` + previewList);
+          }
+        } catch (e) {
+          previewEl.style.display = 'block';
+          previewEl.textContent = 'No se pudo leer el archivo para la vista previa.';
+        }
+      } else {
+        fileNameLabel.textContent = 'Sin archivo';
+        previewEl.style.display = 'none';
+        previewEl.textContent = '';
+      }
+    });
+
+    function log(msg) {
+      if (!logEl.textContent) logEl.style.display = 'block';
+      logEl.textContent += msg + "\n";
+      logEl.scrollTop = logEl.scrollHeight;
+    }
+
+    function resetLog() {
+      logEl.textContent = '';
+      logEl.style.display = 'none';
+    }
+
+    function normalizeDomain(d) {
+      if (!d) return '';
+      let s = String(d).trim().toLowerCase();
+      if (!s) return '';
+
+      // cortar en el primer separador fuerte (; , espacio, tab)
+      s = s.split(/[;,\s]+/)[0];
+
+      // quitar esquema http(s)
+      s = s.replace(/^https?:\/\//, '');
+
+      // quitar ruta si existe
+      const slashIndex = s.indexOf('/');
+      if (slashIndex !== -1) {
+        s = s.slice(0, slashIndex);
+      }
+
+      // quitar comodín *.
+      if (s.startsWith('*.')) {
+        s = s.slice(2);
+      }
+
+      // quitar puntos iniciales redundantes y finales
+      s = s.replace(/^\.+/, '');
+      s = s.replace(/\.+$/, '');
+
+      return s;
+    }
+
+    async function analyzeDomain(domain) {
+      const base = '';
+
+      async function safeFetch(path) {
+        try {
+          const res = await fetch(base + path);
+          if (!res.ok) throw new Error('HTTP ' + res.status);
+          return await res.json();
+        } catch (e) {
+          return { error: e.message || 'error' };
+        }
+      }
+
+      const wwwDomain = domain.startsWith('www.') ? domain : 'www.' + domain;
+
+      const [
+        dnsrecords,
+        dnssecurity,
+        rpki,
+        emailconfig,
+        httpsecurity,
+        w3c,
+        headersMain,
+        headersWww
+      ] = await Promise.all([
+        safeFetch('/dnsrecords/' + encodeURIComponent(domain)),
+        safeFetch('/dnssecurity/' + encodeURIComponent(domain)),
+        safeFetch('/rpki/' + encodeURIComponent(domain)),
+        safeFetch('/emailconfig/' + encodeURIComponent(domain)),
+        safeFetch('/httpsecurity/' + encodeURIComponent(domain)),
+        safeFetch('/w3c/' + encodeURIComponent(domain)),
+        safeFetch('/headers/' + encodeURIComponent(domain)),
+        safeFetch('/headers/' + encodeURIComponent(wwwDomain))
+      ]);
+
+      const hasIPv4 = dnsrecords && dnsrecords.records &&
+                      Array.isArray(dnsrecords.records.A) &&
+                      dnsrecords.records.A.length > 0;
+
+      const hasIPv6 = dnsrecords && dnsrecords.records &&
+                      Array.isArray(dnsrecords.records.AAAA) &&
+                      dnsrecords.records.AAAA.length > 0;
+
+      const dnssecOK = dnssecurity && dnssecurity.valid === true;
+      const rpkiOK   = (rpki && rpki.state === 'valid') || (rpki && rpki.valid === true);
+
+      const spfOK   = emailconfig && emailconfig.spf === true;
+      const dmarcOK = emailconfig && emailconfig.dmarc === true;
+      const dkimOK  = emailconfig && emailconfig.dkim === true;
+
+      const httpOK = httpsecurity && httpsecurity.security &&
+                     (httpsecurity.security.hsts ||
+                      httpsecurity.security.csp ||
+                      httpsecurity.security.xfo ||
+                      httpsecurity.security.xcto ||
+                      httpsecurity.security.xxss);
+
+      let w3cOK = null;
+      if (w3c && typeof w3c.errors === 'number') {
+        w3cOK = w3c.errors === 0;
+      }
+
+      // Interpretar headers para HTTPS 200 y sitio funciona (dominio y www)
+      let anyHeaders = false;
+      let anyHttpsTrue = false;
+      let anySiteTrue = false;
+
+      function considerHeaders(h) {
+        if (!h || h.error) return;
+        anyHeaders = true;
+        if (h.https === true) anyHttpsTrue = true;
+        if (h.https === true || h.redirect === true) anySiteTrue = true;
+      }
+
+      considerHeaders(headersMain);
+      considerHeaders(headersWww);
+
+      let https200 = null;
+      let siteOK = null;
+      if (anyHeaders) {
+        https200 = anyHttpsTrue;
+        siteOK = anySiteTrue;
+      }
+
+      return {
+        domain,
+        hasIPv4,
+        hasIPv6,
+        dnssecOK,
+        rpkiOK,
+        spfOK,
+        dmarcOK,
+        dkimOK,
+        httpOK,
+        w3cOK,
+        https200,
+        siteOK
+      };
+    }
+
+    function resultCell(okValue) {
+      if (okValue === null || typeof okValue === 'undefined') {
+        return '<span class="warn">N/D</span>';
+      }
+      return okValue
+        ? '<span class="ok">OK</span>'
+        : '<span class="bad">No</span>';
+    }
+
+    function appendResultRow(result) {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${result.domain}</td>
+        <td>${resultCell(result.hasIPv4)}</td>
+        <td>${resultCell(result.hasIPv6)}</td>
+        <td>${resultCell(result.dnssecOK)}</td>
+        <td>${resultCell(result.rpkiOK)}</td>
+        <td>${resultCell(result.spfOK)}</td>
+        <td>${resultCell(result.dmarcOK)}</td>
+        <td>${resultCell(result.dkimOK)}</td>
+        <td>${resultCell(result.httpOK)}</td>
+        <td>${resultCell(result.w3cOK)}</td>
+        <td>${resultCell(result.https200)}</td>
+        <td>${resultCell(result.siteOK)}</td>
+      `;
+      resultsBody.appendChild(tr);
+    }
+
+    function setAnalyzingState(active) {
+      isAnalyzing = active;
+      runButton.disabled = active;
+      cancelButton.disabled = !active;
+      fileInput.disabled = active;
+      fileButton.disabled = active;
+      singleDomainInput.disabled = active;
+      progressWrapper.style.display = active ? 'block' : 'none';
+      if (!active) {
+        progressBar.style.width = '0%';
+        progressText.textContent = '';
+      }
+    }
+
+    function updateProgress(current, total) {
+      if (!total || total <= 0) return;
+      const pct = Math.round((current / total) * 100);
+      progressBar.style.width = pct + '%';
+      progressText.textContent = `Progreso: ${current} de ${total} dominios (${pct}%)`;
+    }
+
+    function updateSummary() {
+      const total = allResults.length;
+      if (!total) {
+        summaryEl.style.display = 'none';
+        summaryTotalEl.textContent = '0';
+        summarySiteOkEl.textContent = '0 (0%)';
+        summaryIPv6El.textContent = '0 (0%)';
+        summaryDMARCEl.textContent = '0 (0%)';
+        return;
+      }
+      let siteOkCount = 0;
+      let ipv6Count = 0;
+      let dmarcCount = 0;
+
+      for (const r of allResults) {
+        if (r.siteOK === true) siteOkCount++;
+        if (r.hasIPv6 === true) ipv6Count++;
+        if (r.dmarcOK === true) dmarcCount++;
+      }
+
+      function pct(count) {
+        return Math.round((count / total) * 100);
+      }
+
+      summaryEl.style.display = 'block';
+      summaryTotalEl.textContent = String(total);
+      summarySiteOkEl.textContent = `${siteOkCount} (${pct(siteOkCount)}%)`;
+      summaryIPv6El.textContent = `${ipv6Count} (${pct(ipv6Count)}%)`;
+      summaryDMARCEl.textContent = `${dmarcCount} (${pct(dmarcCount)}%)`;
+    }
+
+    function applyFilters() {
+      const noIPv4 = filterNoIPv4.checked;
+      const siteProblem = filterSiteProblem.checked;
+      const noDMARC = filterNoDMARC.checked;
+
+      const rows = resultsBody.querySelectorAll('tr');
+      rows.forEach((tr, idx) => {
+        const r = allResults[idx];
+        if (!r) {
+          tr.style.display = '';
+          return;
+        }
+        let visible = true;
+        if (noIPv4 && r.hasIPv4 !== false) visible = false;
+        if (siteProblem && !(r.siteOK === false)) visible = false;
+        if (noDMARC && r.dmarcOK !== false) visible = false;
+        tr.style.display = visible ? '' : 'none';
+      });
+    }
+
+    filterNoIPv4.addEventListener('change', applyFilters);
+    filterSiteProblem.addEventListener('change', applyFilters);
+    filterNoDMARC.addEventListener('change', applyFilters);
+
+    runButton.addEventListener('click', async () => {
+      if (isAnalyzing) return;
+
+      statusEl.textContent = '';
+      resetLog();
+      resultsBody.innerHTML = '';
+      allResults = [];
+      cancelRequested = false;
+      updateSummary();
+      applyFilters();
+      previewEl.style.display = 'none';
+      previewEl.textContent = '';
+
+      const single = normalizeDomain(singleDomainInput.value);
+      const file = fileInput.files[0];
+
+      let domains = [];
+
+      if (file) {
+        const text = await file.text();
+        domains = text
+          .split(/\r?\n/)
+          .map(normalizeDomain)
+          .filter(d => d.length > 0);
+      } else if (single) {
+        domains = [single];
+      } else {
+        statusEl.textContent = 'Escribe un dominio o selecciona un archivo .txt.';
+        return;
+      }
+
+      domains = Array.from(new Set(domains));
+
+      if (!domains.length) {
+        statusEl.textContent = 'No se encontraron dominios válidos después de limpiar el archivo.';
+        return;
+      }
+
+      statusEl.textContent = `Analizando ${domains.length} dominio(s)...`;
+      setAnalyzingState(true);
+
+      for (let i = 0; i < domains.length; i++) {
+        if (cancelRequested) {
+          log('⏹ Análisis cancelado por el usuario.');
+          break;
+        }
+        const d = domains[i];
+        log(`▶ Analizando ${d} (${i + 1}/${domains.length})...`);
+        updateProgress(i, domains.length);
+        try {
+          const result = await analyzeDomain(d);
+          appendResultRow(result);
+          allResults.push(result);
+          log(`✔ Listo ${d}`);
+        } catch (e) {
+          log(`✖ Error en ${d}: ${e.message || e}`);
+          const emptyResult = {
+            domain: d,
+            hasIPv4: null,
+            hasIPv6: null,
+            dnssecOK: null,
+            rpkiOK: null,
+            spfOK: null,
+            dmarcOK: null,
+            dkimOK: null,
+            httpOK: null,
+            w3cOK: null,
+            https200: null,
+            siteOK: null
+          };
+          appendResultRow(emptyResult);
+          allResults.push(emptyResult);
+        }
+      }
+
+      updateProgress(domains.length, domains.length);
+      updateSummary();
+      applyFilters();
+
+      if (cancelRequested) {
+        statusEl.textContent = 'Análisis cancelado.';
+      } else {
+        statusEl.textContent = 'Análisis completado.';
+      }
+
+      // Limpia el archivo para evitar reusar el mismo listado sin querer
+      fileInput.value = '';
+      fileNameLabel.textContent = 'Sin archivo';
+      setAnalyzingState(false);
+      cancelRequested = false;
+    });
+
+    cancelButton.addEventListener('click', () => {
+      if (!isAnalyzing) return;
+      confirmOverlay.style.display = 'flex';
+    });
+
+    confirmCancelContinue.addEventListener('click', () => {
+      confirmOverlay.style.display = 'none';
+    });
+
+    confirmCancelYes.addEventListener('click', () => {
+      cancelRequested = true;
+      confirmOverlay.style.display = 'none';
+      // limpia el archivo cargado para permitir un nuevo análisis inmediato
+      fileInput.value = '';
+      fileNameLabel.textContent = 'Sin archivo';
+    });
+
+    downloadCsvButton.addEventListener('click', () => {
+      if (!allResults.length) {
+        alert('No hay resultados para exportar.');
+        return;
+      }
+      const header = [
+        'Dominio',
+        'IPv4',
+        'IPv6',
+        'DNSSEC',
+        'RPKI',
+        'SPF',
+        'DMARC',
+        'DKIM',
+        'HTTP_sec',
+        'W3C',
+        'HTTPS_200',
+        'Sitio_funciona'
+      ];
+      const rows = [header.join(',')];
+
+      function val(v) {
+        if (v === null || typeof v === 'undefined') return 'N/D';
+        return v ? 'OK' : 'No';
+      }
+
+      for (const r of allResults) {
+        rows.push([
+          r.domain,
+          val(r.hasIPv4),
+          val(r.hasIPv6),
+          val(r.dnssecOK),
+          val(r.rpkiOK),
+          val(r.spfOK),
+          val(r.dmarcOK),
+          val(r.dkimOK),
+          val(r.httpOK),
+          r.w3cOK === null || typeof r.w3cOK === 'undefined'
+            ? 'N/D'
+            : r.w3cOK
+            ? 'OK'
+            : 'No',
+          val(r.https200),
+          val(r.siteOK)
+        ].join(','));
+      }
+
+      const csvContent = rows.join('\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'mediciones_isoc_lac.csv';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    });
+
+    downloadJsonButton.addEventListener('click', () => {
+      if (!allResults.length) {
+        alert('No hay resultados para exportar.');
+        return;
+      }
+      const jsonContent = JSON.stringify(allResults, null, 2);
+      const blob = new Blob([jsonContent], { type: 'application/json;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'mediciones_isoc_lac.json';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    });
+  </script>
 </body>
 </html>
