@@ -2,702 +2,1218 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>Analizador – Versión Experimental</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
+  <title>Mediciones ISOC LAC</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    }
-
+    :root { color-scheme: light; }
+    * { box-sizing: border-box; }
     body {
-      background: #f4f6fb;
+      margin: 0;
+      padding: 1rem;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f3f4f6;
       color: #111827;
-      padding: 1.5rem;
     }
-
-    .app {
-      max-width: 900px;
-      margin: 0 auto;
+    h1 { font-size: 1.6rem; margin: 0 0 0.25rem 0; color: #0f172a; }
+    h2 { font-size: 1.1rem; margin: 0 0 0.75rem 0; color: #111827; }
+    .subtitle { font-size: 0.85rem; color: #4b5563; margin-bottom: 0.25rem; }
+    .note { font-size: 0.8rem; color: #2563eb; margin-bottom: 0.75rem; }
+    .layout { display: flex; flex-direction: column; gap: 1rem; }
+    @media (min-width: 900px) {
+      .layout { flex-direction: row; align-items: flex-start; }
+      .left-column { flex: 0 0 380px; }
+      .right-column { flex: 1; }
+    }
+    .card {
       background: #ffffff;
-      border-radius: 1rem;
-      box-shadow: 0 10px 25px rgba(15, 23, 42, 0.12);
-      padding: 1.75rem 1.5rem 1.75rem;
+      border-radius: 0.75rem;
+      padding: 1rem;
+      box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
+      border: 1px solid #e5e7eb;
     }
-
-    header {
-      border-bottom: 1px solid #e5e7eb;
-      padding-bottom: 1rem;
-      margin-bottom: 1.25rem;
+    label {
+      display: block;
+      font-size: 0.85rem;
+      margin-bottom: 0.25rem;
+      color: #374151;
     }
-
-    h1 {
-      font-size: 1.6rem;
-      margin-bottom: 0.3rem;
-    }
-
-    .subtitle {
+    input[type="text"] {
+      width: 100%;
+      padding: 0.5rem 0.75rem;
+      border-radius: 0.5rem;
+      border: 1px solid #d1d5db;
+      background: #ffffff;
+      color: #111827;
       font-size: 0.9rem;
-      color: #6b7280;
-      margin-bottom: 0.8rem;
     }
-
-    .top-actions {
+    input[type="text"]::placeholder { color: #9ca3af; }
+    input[type="file"] { display: none; }
+    .file-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-top: 0.35rem;
+      flex-wrap: wrap;
+    }
+    .file-name {
+      font-size: 0.8rem;
+      color: #6b7280;
+    }
+    .small { font-size: 0.8rem; color: #6b7280; }
+    .buttons-row {
       display: flex;
       flex-wrap: wrap;
       gap: 0.5rem;
+      margin-top: 0.75rem;
       align-items: center;
-      justify-content: flex-end;
     }
-
-    .btn {
+    button {
+      padding: 0.45rem 0.9rem;
+      border-radius: 9999px;
       border: none;
-      border-radius: 999px;
-      padding: 0.5rem 1rem;
       font-size: 0.85rem;
+      font-weight: 600;
       cursor: pointer;
-      font-weight: 500;
       display: inline-flex;
       align-items: center;
       gap: 0.35rem;
-      transition: transform 0.08s ease, box-shadow 0.08s ease, opacity 0.15s;
       white-space: nowrap;
     }
-
-    .btn:disabled {
-      cursor: not-allowed;
-      opacity: 0.55;
-      box-shadow: none;
-      transform: none;
-    }
-
-    .btn:hover:not(:disabled) {
-      transform: translateY(-1px);
-      box-shadow: 0 4px 10px rgba(15, 23, 42, 0.16);
-    }
-
-    .btn-accent {
-      background: #0ea5e9;
-      color: white;
-      box-shadow: 0 2px 5px rgba(14, 165, 233, 0.45);
-    }
-
-    .btn-accent:active:not(:disabled) {
-      transform: translateY(0);
-      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.2);
-    }
-
-    .btn-outline {
-      background: transparent;
-      border: 1px solid #d1d5db;
+    button:disabled { opacity: 0.6; cursor: default; }
+    .btn-primary { background: #2563eb; color: #ffffff; }
+    .btn-secondary {
+      background: #f3f4f6;
       color: #374151;
+      border: 1px solid #e5e7eb;
     }
-
-    .btn-primary {
-      background: #22c55e;
-      color: #ffffff;
-      box-shadow: 0 2px 8px rgba(16, 185, 129, 0.45);
+    .btn-danger {
+      background: #fee2e2;
+      color: #b91c1c;
+      border: 1px solid #fecaca;
     }
-
-    .tag {
-      font-size: 0.7rem;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      background: #eef2ff;
-      color: #4f46e5;
-      border-radius: 999px;
-      padding: 0.15rem 0.6rem;
-    }
-
-    .version-note {
-      background: #eff6ff;
-      border-left: 3px solid #0ea5e9;
-      padding: 0.6rem 0.75rem;
-      border-radius: 0.75rem;
-      margin-top: 0.7rem;
-      font-size: 0.8rem;
-      color: #1f2937;
-    }
-
-    .hidden {
+    #status { margin-top: 0.35rem; min-height: 1.1em; }
+    .log {
+      margin-top: 0.5rem;
+      max-height: 160px;
+      overflow: auto;
+      background: #f9fafb;
+      border-radius: 0.5rem;
+      padding: 0.5rem;
+      font-size: 0.75rem;
+      border: 1px solid #e5e7eb;
+      white-space: pre-wrap;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
       display: none;
     }
-
-    main {
-      display: grid;
-      grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
-      gap: 1.25rem;
-      margin-bottom: 1rem;
-    }
-
-    @media (max-width: 840px) {
-      main {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    section {
+    .preview {
+      margin-top: 0.5rem;
+      font-size: 0.78rem;
+      color: #4b5563;
       background: #f9fafb;
-      border-radius: 0.9rem;
-      padding: 1rem;
+      border-radius: 0.5rem;
       border: 1px solid #e5e7eb;
+      padding: 0.5rem;
+      max-height: 120px;
+      overflow: auto;
     }
-
-    section h2 {
-      font-size: 1rem;
-      margin-bottom: 0.4rem;
-    }
-
-    section p.desc {
-      font-size: 0.82rem;
-      color: #6b7280;
-      margin-bottom: 0.8rem;
-    }
-
-    label {
-      font-size: 0.8rem;
-      font-weight: 500;
-      color: #374151;
-      display: flex;
-      align-items: center;
-      gap: 0.25rem;
-      margin-bottom: 0.35rem;
-    }
-
-    textarea {
-      width: 100%;
-      min-height: 180px;
-      resize: vertical;
-      font-size: 0.85rem;
-      padding: 0.6rem 0.7rem;
-      border-radius: 0.75rem;
-      border: 1px solid #d4d4d8;
-      outline: none;
-      background: #ffffff;
-    }
-
-    textarea:focus {
-      border-color: #4f46e5;
-      box-shadow: 0 0 0 1px rgba(79, 70, 229, 0.35);
-    }
-
-    .input-actions {
-      display: flex;
-      justify-content: flex-end;
-      gap: 0.5rem;
-      margin-top: 0.7rem;
-      flex-wrap: wrap;
-    }
-
-    .status {
-      font-size: 0.78rem;
-      color: #6b7280;
+    .progress-wrapper {
       margin-top: 0.4rem;
-      display: flex;
-      align-items: center;
-      gap: 0.35rem;
+      display: none;
     }
-
-    .status-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 999px;
-      background: #10b981;
+    .progress-bar-bg {
+      width: 100%;
+      height: 6px;
+      border-radius: 9999px;
+      background: #e5e7eb;
+      overflow: hidden;
     }
-
-    .status-dot.running {
-      background: #f97316;
-      animation: pulse 1s infinite;
+    .progress-bar-fill {
+      height: 100%;
+      width: 0%;
+      background: #2563eb;
+      transition: width 0.15s linear;
     }
-
-    @keyframes pulse {
-      0% { transform: scale(1); opacity: 0.8;}
-      50% { transform: scale(1.4); opacity: 0.4;}
-      100% { transform: scale(1); opacity: 0.8;}
-    }
-
-    #results {
-      font-size: 0.86rem;
-      color: #111827;
-      background: #ffffff;
-      border-radius: 0.75rem;
-      border: 1px solid #e5e7eb;
-      padding: 0.7rem;
-      min-height: 120px;
-      white-space: pre-wrap;
-      word-wrap: break-word;
-    }
-
-    .results-placeholder {
-      color: #9ca3af;
-      font-style: italic;
-    }
-
-    .downloads {
-      margin-top: 0.7rem;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.5rem;
-      justify-content: flex-end;
-    }
-
-    footer {
-      border-top: 1px solid #e5e7eb;
-      padding-top: 0.8rem;
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: space-between;
-      gap: 0.6rem;
-      font-size: 0.78rem;
-      color: #6b7280;
-    }
-
-    footer small span {
-      font-weight: 500;
+    .progress-text {
+      margin-top: 0.2rem;
+      font-size: 0.75rem;
       color: #4b5563;
     }
-  </style>
+    .table-container {
+      width: 100%;
+      overflow-x: auto;
+      border-radius: 0.5rem;
+      border: 1px solid #e5e7eb;
+      background: #ffffff;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.8rem;
+      min-width: 780px;
+    }
+    th, td {
+      padding: 0.45rem 0.5rem;
+      text-align: left;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    th {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      background: #e5e7eb;
+      color: #111827;
+      font-weight: 600;
+    }
+    tr:nth-child(even) td { background: #f9fafb; }
+    tr:nth-child(odd) td { background: #ffffff; }
+    .ok { color: #15803d; font-weight: 600; }
+    .bad { color: #b91c1c; font-weight: 600; }
+    .warn { color: #92400e; font-weight: 600; }
+    .actions-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+    .summary {
+      margin-bottom: 0.5rem;
+      display: none;
+    }
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 0.5rem;
+    }
+    .summary-item {
+      background: #f9fafb;
+      border-radius: 0.5rem;
+      padding: 0.4rem 0.6rem;
+      border: 1px solid #e5e7eb;
+      font-size: 0.78rem;
+    }
+    .summary-label {
+      color: #6b7280;
+      display: block;
+    }
+    .summary-value {
+      font-weight: 600;
+      color: #111827;
+    }
+    .filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem 1rem;
+      align-items: center;
+      margin-bottom: 0.5rem;
+    }
+    .filters span {
+      font-size: 0.75rem;
+      color: #6b7280;
+    }
+    .filters label {
+      font-size: 0.78rem;
+      margin-bottom: 0;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.45);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
+    }
+    .modal {
+      background: #ffffff;
+      border-radius: 0.75rem;
+      padding: 1rem;
+      max-width: 360px;
+      width: 90%;
+      box-shadow: 0 20px 40px rgba(15, 23, 42, 0.3);
+      border: 1px solid #e5e7eb;
+    }
+    .modal-text {
+      font-size: 0.9rem;
+      color: #111827;
+      margin-bottom: 0.75rem;
+    }
+    .modal-buttons {
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.5rem;
+      margin-top: 0.25rem;
+    }
+    .note-box {
+      margin-top: 0.75rem;
+      background: #eef2ff;
+      border-left: 4px solid #4f46e5;
+      padding: 0.75rem;
+      border-radius: 0.5rem;
+      font-size: 0.8rem;
+      color: #1e1b4b;
+      display: none;
+    }
+    .contact-box {
+      margin-top: 0.75rem;
+      text-align: right;
+    }
+
+    .note-toggle-row {
+      margin-top: 0.75rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+  
+    .lang-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.25rem 0.6rem;
+      border-radius: 9999px;
+      border: 1px solid #d1d5db;
+      background: #ffffff;
+      font-size: 0.8rem;
+      cursor: pointer;
+      color: #374151;
+    }
+    .lang-toggle span.code {
+      font-weight: 600;
+    }
+    .flag {
+      width: 18px;
+      height: 12px;
+      border-radius: 2px;
+      overflow: hidden;
+      background-size: cover;
+      background-position: center;
+    }
+    .flag-ec {
+      background-image: linear-gradient(
+        to bottom,
+        #fcd116 0 50%,
+        #003893 50% 75%,
+        #ce1126 75% 100%
+      );
+    }
+    .flag-us {
+      background-image: linear-gradient(
+        to bottom,
+        #b22234 0 7.7%,
+        #b22234 7.7% 15.4%,
+        #ffffff 15.4% 23.1%,
+        #ffffff 23.1% 30.8%,
+        #b22234 30.8% 38.5%,
+        #b22234 38.5% 46.2%,
+        #ffffff 46.2% 53.9%,
+        #ffffff 53.9% 61.6%,
+        #b22234 61.6% 69.3%,
+        #b22234 69.3% 77%,
+        #ffffff 77% 84.7%,
+        #ffffff 84.7% 92.4%,
+        #b22234 92.4% 100%
+      );
+    }
+</style>
 </head>
 <body>
-  <div class="app">
-    <header>
-      <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:0.75rem;">
-        <div>
-          <h1 id="t-title">Analizador de datos</h1>
-          <p class="subtitle" id="t-subtitle">Herramienta local de apoyo orientativo para revisar resultados.</p>
-          <span class="tag">BETA</span>
+    <header style="margin-bottom: 0.75rem;">
+    <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:0.75rem;">
+      <div>
+        <h1 id="titleMain">Mediciones ISOC LAC</h1>
+        <div class="subtitle" id="subtitleMain">Herramienta experimental para revisión rápida de dominios.</div>
+        <div class="note" id="noteMain">
+          Válido para cualquier dominio (incluidos dominios de 3er y 4to nivel).
+        </div>
+      </div>
+      <button id="langToggle" type="button" class="lang-toggle" title="Cambiar idioma">
+        <span id="langCode" class="code">ES</span>
+        <span id="langFlag" class="flag flag-ec"></span>
+      </button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <div class="left-column">
+      <div class="card">
+        <h2 id="leftTitle">Entrada</h2>
+        <label for="singleDomain" id="labelSingleDomain">Dominio único</label>
+        <input id="singleDomain" type="text"
+               placeholder="Ej: presidencia.gob.ec, example.com, gobierno.cl" />
+
+        <div style="margin-top:0.75rem">
+          <label for="fileInput" id="labelFile">O archivo .txt (un dominio por línea)</label>
+          <div class="file-row">
+            <button id="fileButton" type="button" class="btn-secondary">Seleccionar archivo</button>
+            <span id="fileName" class="file-name">Sin archivo</span>
+            <input id="fileInput" type="file" accept=".txt" />
+          </div>
+          <p class="small" id="fileHelp">
+            El sistema limpiará formatos básicos (http(s)://, barras, espacios, ; , y comodines *.).<br />
+            Ejemplo de archivo:<br />
+            presidencia.gob.ec<br />
+            https://aduana.gob.ec;<br />
+            *.registrocivil.gob.ec
+          </p>
         </div>
 
-        <div class="top-actions">
-          <button id="langBtn" class="btn btn-accent" type="button">
-            EN
+        <div class="buttons-row">
+          <button id="runButton" class="btn-primary">Analizar</button>
+          <button id="cancelButton" class="btn-danger" disabled>Cancelar análisis</button>
+        </div>
+        <div id="status" class="small"></div>
+
+        <div id="progressWrapper" class="progress-wrapper">
+          <div class="progress-bar-bg">
+            <div id="progressBar" class="progress-bar-fill"></div>
+          </div>
+          <div id="progressText" class="progress-text"></div>
+        </div>
+
+        <div id="preview" class="preview" style="display:none;"></div>
+        <div id="log" class="log"></div>
+      </div>
+    </div>
+
+    <div class="right-column">
+      <div class="card">
+        <div class="actions-bar">
+          <h2 id="rightTitle" style="margin:0;">Resultados</h2>
+          <div style="display:flex; gap:0.4rem; flex-wrap:wrap;">
+            <button id="downloadCsv" class="btn-secondary">Descargar CSV</button>
+            <button id="downloadJson" class="btn-secondary">Descargar JSON</button>
+          </div>
+        </div>
+
+        <div id="summary" class="summary">
+          <div class="summary-grid">
+            <div class="summary-item">
+              <span class="summary-label" id="summaryLabelTotal">Dominios analizados</span>
+              <span id="summaryTotal" class="summary-value">0</span>
+            </div>
+            <div class="summary-item">
+              <span class="summary-label" id="summaryLabelSiteOk">Sitios que funcionan</span>
+              <span id="summarySiteOk" class="summary-value">0 (0%)</span>
+            </div>
+            <div class="summary-item">
+              <span class="summary-label" id="summaryLabelIPv6">Con IPv6</span>
+              <span id="summaryIPv6" class="summary-value">0 (0%)</span>
+            </div>
+            <div class="summary-item">
+              <span class="summary-label" id="summaryLabelDMARC">Con DMARC</span>
+              <span id="summaryDMARC" class="summary-value">0 (0%)</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="filters">
+          <span id="filtersLabel">Filtros rápidos:</span>
+          <label><input type="checkbox" id="filterNoIPv4" /> Sin IPv4</label>
+          <label><input type="checkbox" id="filterSiteProblem" /> Sitio no funciona</label>
+          <label><input type="checkbox" id="filterNoDMARC" /> Sin DMARC</label>
+        </div>
+
+        <div class="table-container" style="margin-top:0.25rem;">
+          <table id="resultsTable">
+            <thead>
+              <tr>
+                <th id="thDomain">Dominio</th>
+                <th>IPv4</th>
+                <th>IPv6</th>
+                <th>DNSSEC</th>
+                <th>RPKI</th>
+                <th>SPF</th>
+                <th>DMARC</th>
+                <th>DKIM</th>
+                <th>HTTP sec.</th>
+                <th>W3C</th>
+                <th>HTTPS 200</th>
+                <th id="thSiteWorks">Sitio funciona</th>
+              </tr>
+            </thead>
+            <tbody id="resultsBody"></tbody>
+          </table>
+        </div>
+
+        <div class="note-toggle-row">
+          <span id="infoToolText">Información sobre la herramienta:</span>
+          <button id="toggleNoteBtn" class="btn-primary">
+            VERSION EXPERIMENTAL (ver más)
           </button>
-          <button id="versionBtn" class="btn btn-accent" type="button">
-            VERSIÓN EXPERIMENTAL (ver más)
-          </button>
-          <button id="feedbackBtn" class="btn btn-accent" type="button">
+        </div>
+
+        <div id="noteBox" class="note-box" style="display:none;"></div>
+
+        <div class="contact-box">
+          <button id="contactBtn" class="btn-primary" onclick="location.href='mailto:sociedadinternetecuador@gmail.com'">
             PROBLEMAS / SUGERENCIAS
           </button>
         </div>
       </div>
+    </div>
+  </div>
 
-      <div id="versionNote" class="version-note hidden">
-        <strong id="t-exp-title">Versión Experimental:</strong>
-        <span id="t-exp-desc">
-          Esta herramienta está en pruebas. Los resultados pueden contener errores o análisis incompletos.
-          Úsala solo como apoyo orientativo y revisa siempre con criterio propio antes de tomar decisiones.
-        </span>
+  <div id="confirmOverlay" class="overlay">
+    <div class="modal">
+      <div class="modal-text" id="modalText">
+        Esto cancelará el análisis en marcha. ¿Está seguro?
       </div>
-    </header>
-
-    <main>
-      <!-- PANEL IZQUIERDO: ENTRADA / ANÁLISIS -->
-      <section>
-        <h2 id="t-step1-title">1. Pega o carga la información a analizar</h2>
-        <p class="desc" id="t-step1-desc">
-          Puedes pegar aquí el contenido que quieras analizar. Luego haz clic en <strong>“Analizar”</strong>.
-        </p>
-
-        <label for="inputText" id="t-data-label">
-          Datos a analizar
-        </label>
-        <textarea id="inputText" placeholder="Pega aquí la información que quieres analizar…"></textarea>
-
-        <div class="input-actions">
-          <button id="cancelBtn" class="btn btn-outline" type="button" disabled>
-            Cancelar análisis
-          </button>
-          <button id="analyzeBtn" class="btn btn-primary" type="button">
-            Analizar
-          </button>
-        </div>
-
-        <div class="status" id="statusLine">
-          <span class="status-dot" id="statusDot"></span>
-          <span id="statusText">Listo para analizar.</span>
-        </div>
-      </section>
-
-      <!-- PANEL DERECHO: RESULTADOS / DESCARGAS -->
-      <section>
-        <h2 id="t-step2-title">2. Resultados</h2>
-        <p class="desc" id="t-step2-desc">
-          Aquí aparecerá un resumen del análisis. Una vez completo podrás descargarlo en CSV o JSON.
-        </p>
-
-        <div id="results">
-          <span class="results-placeholder" id="t-results-placeholder">
-            No hay resultados todavía. Ejecuta un análisis para ver el contenido aquí.
-          </span>
-        </div>
-
-        <div class="downloads">
-          <button id="downloadCsvBtn" class="btn btn-outline" type="button" disabled>
-            Bajar CSV
-          </button>
-          <button id="downloadJsonBtn" class="btn btn-outline" type="button" disabled>
-            Bajar JSON
-          </button>
-        </div>
-      </section>
-    </main>
-
-    <footer>
-      <small>
-        <span id="t-footer-note-label">Nota:</span>
-        <span id="t-footer-note-text">
-          mientras el análisis esté en curso, los botones de descarga se desactivan para evitar bajar archivos incompletos.
-        </span>
-      </small>
-      <small>&copy; <span id="year"></span> <span id="t-footer-right">Herramienta local – uso interno.</span></small>
-    </footer>
+      <div class="modal-buttons">
+        <button id="confirmCancelContinue" class="btn-secondary">CONTINUAR</button>
+        <button id="confirmCancelYes" class="btn-danger">SI CANCELA</button>
+      </div>
+    </div>
   </div>
 
   <script>
-    // --- TRADUCCIONES ---
-    let lang = "es";
+    const runButton = document.getElementById('runButton');
+    const cancelButton = document.getElementById('cancelButton');
+    const statusEl  = document.getElementById('status');
+    const logEl     = document.getElementById('log');
+    const resultsBody = document.getElementById('resultsBody');
+    const singleDomainInput = document.getElementById('singleDomain');
+    const fileInput = document.getElementById('fileInput');
+    const fileButton = document.getElementById('fileButton');
+    const fileNameLabel = document.getElementById('fileName');
+    const downloadCsvButton = document.getElementById('downloadCsv');
+    const downloadJsonButton = document.getElementById('downloadJson');
 
-    const T = {
+    const progressWrapper = document.getElementById('progressWrapper');
+    co<script>
+    const runButton = document.getElementById('runButton');
+    const cancelButton = document.getElementById('cancelButton');
+    const statusEl  = document.getElementById('status');
+    const logEl     = document.getElementById('log');
+    const resultsBody = document.getElementById('resultsBody');
+    const singleDomainInput = document.getElementById('singleDomain');
+    const fileInput = document.getElementById('fileInput');
+    const fileButton = document.getElementById('fileButton');
+    const fileNameLabel = document.getElementById('fileName');
+    const downloadCsvButton = document.getElementById('downloadCsv');
+    const downloadJsonButton = document.getElementById('downloadJson');
+
+    const progressWrapper = document.getElementById('progressWrapper');
+    const progressBar = document.getElementById('progressBar');
+    const progressText = document.getElementById('progressText');
+
+    const previewEl = document.getElementById('preview');
+    const summaryEl = document.getElementById('summary');
+    const summaryTotalEl = document.getElementById('summaryTotal');
+    const summarySiteOkEl = document.getElementById('summarySiteOk');
+    const summaryIPv6El = document.getElementById('summaryIPv6');
+    const summaryDMARCEl = document.getElementById('summaryDMARC');
+
+    const filterNoIPv4 = document.getElementById('filterNoIPv4');
+    const filterSiteProblem = document.getElementById('filterSiteProblem');
+    const filterNoDMARC = document.getElementById('filterNoDMARC');
+
+    const confirmOverlay = document.getElementById('confirmOverlay');
+    const confirmCancelYes = document.getElementById('confirmCancelYes');
+    const confirmCancelContinue = document.getElementById('confirmCancelContinue');
+    const toggleNoteBtn = document.getElementById('toggleNoteBtn');
+    const noteBox = document.getElementById('noteBox');
+
+    const langToggle = document.getElementById('langToggle');
+    const langCode = document.getElementById('langCode');
+    const langFlag = document.getElementById('langFlag');
+
+    const titleMain = document.getElementById('titleMain');
+    const subtitleMain = document.getElementById('subtitleMain');
+    const noteMain = document.getElementById('noteMain');
+    const leftTitle = document.getElementById('leftTitle');
+    const rightTitle = document.getElementById('rightTitle');
+    const labelSingleDomain = document.getElementById('labelSingleDomain');
+    const labelFile = document.getElementById('labelFile');
+    const fileHelp = document.getElementById('fileHelp');
+    const filtersLabel = document.getElementById('filtersLabel');
+    const labelNoIPv4 = document.getElementById('labelNoIPv4');
+    const labelSiteProblemText = document.getElementById('labelSiteProblem');
+    const labelNoDMARCText = document.getElementById('labelNoDMARC');
+    const infoToolText = document.getElementById('infoToolText');
+    const modalText = document.getElementById('modalText');
+    const contactBtn = document.getElementById('contactBtn');
+    const thDomain = document.getElementById('thDomain');
+    const thSiteWorks = document.getElementById('thSiteWorks');
+
+    let currentLang = 'es';
+
+    const I18N = {
       es: {
-        title: "Analizador de datos",
-        subtitle: "Herramienta local de apoyo orientativo para revisar resultados.",
-        versionBtnShow: "VERSIÓN EXPERIMENTAL (ver más)",
-        versionBtnHide: "VERSIÓN EXPERIMENTAL (ocultar)",
-        expTitle: "Versión Experimental:",
-        expDesc: "Esta herramienta está en pruebas. Los resultados pueden contener errores o análisis incompletos. Úsala solo como apoyo orientativo y revisa siempre con criterio propio antes de tomar decisiones.",
-        step1Title: "1. Pega o carga la información a analizar",
-        step1Desc: "Puedes pegar aquí el contenido que quieras analizar. Luego haz clic en “Analizar”.",
-        dataLabel: "Datos a analizar",
-        textareaPlaceholder: "Pega aquí la información que quieres analizar…",
-        cancelBtn: "Cancelar análisis",
-        analyzeBtn: "Analizar",
-        statusReady: "Listo para analizar.",
-        statusAnalyzing: "Analizando… por favor espera.",
-        statusCanceled: "<strong>Análisis cancelado.</strong>",
-        statusCanceledUser: "<strong>Análisis cancelado por el usuario.</strong>",
-        step2Title: "2. Resultados",
-        step2Desc: "Aquí aparecerá un resumen del análisis. Una vez completo podrás descargarlo en CSV o JSON.",
-        resultsPlaceholder: "No hay resultados todavía. Ejecuta un análisis para ver el contenido aquí.",
-        downloadCsv: "Bajar CSV",
-        downloadJson: "Bajar JSON",
-        footerNoteLabel: "Nota:",
-        footerNoteText: "mientras el análisis esté en curso, los botones de descarga se desactivan para evitar bajar archivos incompletos.",
-        footerRight: "Herramienta local – uso interno.",
-        alertNoText: "Por favor, pega algún contenido para analizar.",
-        emailBody: "Hola,\n\nQuisiera reportar un problema / sugerencia sobre la herramienta:\n\n(Escribe aquí tu comentario)\n",
-        resumenLabel: "Resumen:",
-        lenLabel: "Longitud del texto analizado:",
-        previewLabel: "Vista previa del contenido:"
+        code: 'ES',
+        flagClass: 'flag-ec',
+        titleMain: 'Mediciones ISOC LAC',
+        subtitleMain: 'Herramienta experimental para revisión rápida de dominios.',
+        noteMain: 'Válido para cualquier dominio (incluidos dominios de 3er y 4to nivel).',
+        leftTitle: 'Entrada',
+        rightTitle: 'Resultados',
+        singleDomainLabel: 'Dominio único',
+        singleDomainPlaceholder: 'Ej: presidencia.gob.ec, example.com, gobierno.cl',
+        fileLabel: 'O archivo .txt (un dominio por línea)',
+        fileButton: 'Seleccionar archivo',
+        fileNone: 'Sin archivo',
+        fileHelp: 'El sistema limpiará formatos básicos (http(s)://, barras, espacios, ; , y comodines *.).\nEjemplo de archivo:\npresidencia.gob.ec\nhttps://aduana.gob.ec;\n*.registrocivil.gob.ec',
+        fileNoValid: 'No se encontraron dominios válidos en el archivo.',
+        filePreviewPrefix: 'Dominios detectados: ',
+        filePreviewMore: ' Mostrando los primeros 10:',
+        fileReadError: 'No se pudo leer el archivo para la vista previa.',
+        statusNoInput: 'Escribe un dominio o selecciona un archivo .txt.',
+        statusNoValidAfterClean: 'No se encontraron dominios válidos después de limpiar el archivo.',
+        statusAnalyzing: n => `Analizando ${n} dominio(s)...`,
+        statusCanceled: 'Análisis cancelado.',
+        statusCompleted: 'Análisis completado.',
+        progressText: (c, t, p) => `Progreso: ${c} de ${t} dominios (${p}%)`,
+        filtersLabel: 'Filtros rápidos:',
+        noIPv4: 'Sin IPv4',
+        siteProblem: 'Sitio no funciona',
+        noDMARC: 'Sin DMARC',
+        btnRun: 'Analizar',
+        btnCancel: 'Cancelar análisis',
+        btnCsv: 'Descargar CSV',
+        btnJson: 'Descargar JSON',
+        modalText: 'Esto cancelará el análisis en marcha. ¿Está seguro?',
+        modalContinue: 'CONTINUAR',
+        modalYesCancel: 'SI CANCELA',
+        noteToggleMore: 'VERSION EXPERIMENTAL (ver más)',
+        noteToggleLess: 'VERSION EXPERIMENTAL (ver menos)',
+        infoTool: 'Información sobre la herramienta:',
+        contactBtn: 'PROBLEMAS / SUGERENCIAS',
+        noResultsExport: 'No hay resultados para exportar.',
+        logCancelUserHtml: '<strong>⏹ Análisis cancelado por el usuario.</strong>',
+        thDomain: 'Dominio',
+        thSiteWorks: 'Sitio funciona',
+        noteHtml: `<b>Nota sobre esta versión experimental:</b><br>
+          Esta herramienta analiza únicamente el dominio ingresado (y su variante <i>www</i>).
+          Los resultados se basan en consultas técnicas directas al dominio evaluado y
+          <b>no siguen redirecciones hacia otros dominios</b>, ni verifican configuraciones externas
+          como servicios de correo alojados en otros nombres. Por esta razón, algunos dominios
+          pueden aparecer como “No” o “N/D” aunque su sitio final funcione correctamente o sus
+          servicios estén configurados en otro subdominio o proveedor.<br><br>
+          Los datos deben interpretarse como una <b>aproximación técnica inicial</b>, no como una
+          verificación exhaustiva del estado completo del dominio o de su infraestructura.`
       },
       en: {
-        title: "Data analyzer",
-        subtitle: "Local tool to help you quickly review results.",
-        versionBtnShow: "EXPERIMENTAL VERSION (more info)",
-        versionBtnHide: "EXPERIMENTAL VERSION (hide)",
-        expTitle: "Experimental version:",
-        expDesc: "This tool is in testing. Results may contain errors or incomplete analysis. Use it only as guidance and always double-check before making decisions.",
-        step1Title: "1. Paste or load the information to analyze",
-        step1Desc: "You can paste here the content you want to analyze, then click “Analyze”.",
-        dataLabel: "Data to analyze",
-        textareaPlaceholder: "Paste here the information you want to analyze…",
-        cancelBtn: "Cancel analysis",
-        analyzeBtn: "Analyze",
-        statusReady: "Ready to analyze.",
-        statusAnalyzing: "Analyzing… please wait.",
-        statusCanceled: "<strong>Analysis cancelled.</strong>",
-        statusCanceledUser: "<strong>Analysis cancelled by the user.</strong>",
-        step2Title: "2. Results",
-        step2Desc: "A summary of the analysis will appear here. Once complete, you can download it as CSV or JSON.",
-        resultsPlaceholder: "No results yet. Run an analysis to view the content here.",
-        downloadCsv: "Download CSV",
-        downloadJson: "Download JSON",
-        footerNoteLabel: "Note:",
-        footerNoteText: "while the analysis is running, the download buttons are disabled to avoid incomplete files.",
-        footerRight: "Local tool – internal use only.",
-        alertNoText: "Please paste some content to analyze.",
-        emailBody: "Hi,\n\nI would like to report a problem / suggestion about the tool:\n\n(Write your comment here)\n",
-        resumenLabel: "Summary:",
-        lenLabel: "Length of analyzed text:",
-        previewLabel: "Content preview:"
+        code: 'EN',
+        flagClass: 'flag-us',
+        titleMain: 'ISOC LAC Measurements',
+        subtitleMain: 'Experimental tool for quick domain review.',
+        noteMain: 'Valid for any domain (including 3rd and 4th level domains).',
+        leftTitle: 'Input',
+        rightTitle: 'Results',
+        singleDomainLabel: 'Single domain',
+        singleDomainPlaceholder: 'E.g.: presidencia.gob.ec, example.com, gobierno.cl',
+        fileLabel: 'Or .txt file (one domain per line)',
+        fileButton: 'Select file',
+        fileNone: 'No file',
+        fileHelp: 'The system will clean basic formats (http(s)://, slashes, spaces, ; , and *.).\nFile example:\npresidencia.gob.ec\nhttps://aduana.gob.ec;\n*.registrocivil.gob.ec',
+        fileNoValid: 'No valid domains were found in the file.',
+        filePreviewPrefix: 'Detected domains: ',
+        filePreviewMore: ' Showing the first 10:',
+        fileReadError: 'The file could not be read for preview.',
+        statusNoInput: 'Type a domain or select a .txt file.',
+        statusNoValidAfterClean: 'No valid domains were found after cleaning the file.',
+        statusAnalyzing: n => `Analyzing ${n} domain(s)...`,
+        statusCanceled: 'Analysis cancelled.',
+        statusCompleted: 'Analysis completed.',
+        progressText: (c, t, p) => `Progress: ${c} of ${t} domains (${p}%)`,
+        filtersLabel: 'Quick filters:',
+        noIPv4: 'No IPv4',
+        siteProblem: 'Site not working',
+        noDMARC: 'No DMARC',
+        btnRun: 'Analyze',
+        btnCancel: 'Cancel analysis',
+        btnCsv: 'Download CSV',
+        btnJson: 'Download JSON',
+        modalText: 'This will cancel the running analysis. Are you sure?',
+        modalContinue: 'CONTINUE',
+        modalYesCancel: 'YES, CANCEL',
+        noteToggleMore: 'EXPERIMENTAL VERSION (see more)',
+        noteToggleLess: 'EXPERIMENTAL VERSION (see less)',
+        infoTool: 'About this tool:',
+        contactBtn: 'ISSUES / SUGGESTIONS',
+        noResultsExport: 'There are no results to export.',
+        logCancelUserHtml: '<strong>⏹ Analysis cancelled by the user.</strong>',
+        thDomain: 'Domain',
+        thSiteWorks: 'Site works',
+        noteHtml: `<b>Note on this experimental version:</b><br>
+          This tool only analyzes the domain you enter (and its <i>www</i> variant).
+          Results are based on technical checks performed directly on that domain and
+          <b>do not follow redirects to other domains</b>, nor do they verify external configurations
+          such as mail services hosted under different names. Because of this, some domains
+          may appear as “No” or “N/D” even if the final website works correctly or their
+          services are configured on another subdomain or provider.<br><br>
+          The data should be understood as an <b>initial technical approximation</b>, not as an
+          exhaustive verification of the full state of the domain or its infrastructure.`
       }
     };
 
-    // --- ELEMENTOS BÁSICOS ---
-    const versionBtn = document.getElementById("versionBtn");
-    const versionNote = document.getElementById("versionNote");
-    const feedbackBtn = document.getElementById("feedbackBtn");
-    const langBtn = document.getElementById("langBtn");
-
-    const analyzeBtn = document.getElementById("analyzeBtn");
-    const cancelBtn = document.getElementById("cancelBtn");
-    const inputText = document.getElementById("inputText");
-    const resultsBox = document.getElementById("results");
-    const statusDot = document.getElementById("statusDot");
-    const statusText = document.getElementById("statusText");
-
-    const downloadCsvBtn = document.getElementById("downloadCsvBtn");
-    const downloadJsonBtn = document.getElementById("downloadJsonBtn");
-
-    const tTitle = document.getElementById("t-title");
-    const tSubtitle = document.getElementById("t-subtitle");
-    const tExpTitle = document.getElementById("t-exp-title");
-    const tExpDesc = document.getElementById("t-exp-desc");
-    const tStep1Title = document.getElementById("t-step1-title");
-    const tStep1Desc = document.getElementById("t-step1-desc");
-    const tDataLabel = document.getElementById("t-data-label");
-    const tResultsPlaceholder = document.getElementById("t-results-placeholder");
-    const tStep2Title = document.getElementById("t-step2-title");
-    const tStep2Desc = document.getElementById("t-step2-desc");
-    const tFooterNoteLabel = document.getElementById("t-footer-note-label");
-    const tFooterNoteText = document.getElementById("t-footer-note-text");
-    const tFooterRight = document.getElementById("t-footer-right");
-
-    let hasResults = false;
-    let analysisRunning = false;
-    let currentAnalysisData = null; // resultado estructurado de tu análisis real
-    let analysisTimeoutId = null;
-
-    // --- AÑO EN FOOTER ---
-    document.getElementById("year").textContent = new Date().getFullYear();
-
-    // --- APLICAR IDIOMA ---
     function applyLang() {
-      const tr = T[lang];
+      const t = I18N[currentLang];
 
-      tTitle.textContent = tr.title;
-      tSubtitle.textContent = tr.subtitle;
-      tExpTitle.textContent = tr.expTitle;
-      tExpDesc.textContent = tr.expDesc;
-      tStep1Title.textContent = tr.step1Title;
-      tStep1Desc.textContent = tr.step1Desc;
-      tDataLabel.textContent = tr.dataLabel;
-      inputText.placeholder = tr.textareaPlaceholder;
-      cancelBtn.textContent = tr.cancelBtn;
-      analyzeBtn.textContent = tr.analyzeBtn;
-      tStep2Title.textContent = tr.step2Title;
-      tStep2Desc.textContent = tr.step2Desc;
-      tResultsPlaceholder.textContent = tr.resultsPlaceholder;
-      downloadCsvBtn.textContent = tr.downloadCsv;
-      downloadJsonBtn.textContent = tr.downloadJson;
-      tFooterNoteLabel.textContent = tr.footerNoteLabel;
-      tFooterNoteText.textContent = tr.footerNoteText;
-      tFooterRight.textContent = tr.footerRight;
+      document.documentElement.lang = currentLang;
 
-      // Botón de idioma: muestra el idioma al que cambiará
-      langBtn.textContent = lang === "es" ? "EN" : "ES";
-
-      // Botón de versión experimental según estado actual
-      if (versionNote.classList.contains("hidden")) {
-        versionBtn.textContent = tr.versionBtnShow;
-      } else {
-        versionBtn.textContent = tr.versionBtnHide;
+      if (langCode && langFlag) {
+        langCode.textContent = t.code;
+        langFlag.className = 'flag ' + t.flagClass;
       }
 
-      // Estado: solo actualizamos a "listo" si no hay análisis en curso
-      if (!analysisRunning && !hasResults) {
-        statusText.textContent = tr.statusReady;
+      if (titleMain) titleMain.textContent = t.titleMain;
+      if (subtitleMain) subtitleMain.textContent = t.subtitleMain;
+      if (noteMain) noteMain.textContent = t.noteMain;
+
+      if (leftTitle) leftTitle.textContent = t.leftTitle;
+      if (rightTitle) rightTitle.textContent = t.rightTitle;
+
+      if (labelSingleDomain) labelSingleDomain.textContent = t.singleDomainLabel;
+      if (singleDomainInput) singleDomainInput.placeholder = t.singleDomainPlaceholder;
+
+      if (labelFile) labelFile.textContent = t.fileLabel;
+      if (fileButton) fileButton.textContent = t.fileButton;
+      if (fileNameLabel && !fileInput.files[0]) fileNameLabel.textContent = t.fileNone;
+
+      if (fileHelp) fileHelp.innerText = t.fileHelp.replace(/\n/g, '\n');
+
+      if (runButton) runButton.textContent = t.btnRun;
+      if (cancelButton) cancelButton.textContent = t.btnCancel;
+
+      if (downloadCsvButton) downloadCsvButton.textContent = t.btnCsv;
+      if (downloadJsonButton) downloadJsonButton.textContent = t.btnJson;
+
+      if (filtersLabel) filtersLabel.textContent = t.filtersLabel;
+      if (labelNoIPv4) labelNoIPv4.textContent = t.noIPv4;
+      if (labelSiteProblemText) labelSiteProblemText.textContent = t.siteProblem;
+      if (labelNoDMARCText) labelNoDMARCText.textContent = t.noDMARC;
+
+      if (infoToolText) infoToolText.textContent = t.infoTool;
+      if (modalText) modalText.textContent = t.modalText;
+      if (confirmCancelContinue) confirmCancelContinue.textContent = t.modalContinue;
+      if (confirmCancelYes) confirmCancelYes.textContent = t.modalYesCancel;
+
+      if (contactBtn) contactBtn.textContent = t.contactBtn;
+
+      if (thDomain) thDomain.textContent = t.thDomain;
+      if (thSiteWorks) thSiteWorks.textContent = t.thSiteWorks;
+
+      const noteBoxEl = document.getElementById('noteBox');
+      if (noteBoxEl) {
+        noteBoxEl.innerHTML = t.noteHtml;
+      }
+
+      if (toggleNoteBtn) {
+        const isHidden = noteBoxEl && (noteBoxEl.style.display === '' || noteBoxEl.style.display === 'none');
+        toggleNoteBtn.textContent = isHidden ? t.noteToggleMore : t.noteToggleLess;
       }
     }
 
-    // --- TOGGLE IDIOMA ---
-    langBtn.addEventListener("click", () => {
-      lang = lang === "es" ? "en" : "es";
+    if (langToggle) {
+      langToggle.addEventListener('click', () => {
+        currentLang = currentLang === 'es' ? 'en' : 'es';
+        applyLang();
+      });
       applyLang();
+    }
+
+
+
+    let cancelRequested = false;
+    let isAnalyzing = false;
+    let allResults = [];
+
+    fileButton.addEventListener('click', () => {
+      if (isAnalyzing) return;
+      fileInput.click();
     });
 
-    // --- TOGGLE VERSIÓN EXPERIMENTAL ---
-    versionBtn.addEventListener("click", () => {
-      const tr = T[lang];
-      const isHidden = versionNote.classList.contains("hidden");
-      if (isHidden) {
-        versionNote.classList.remove("hidden");
-        versionBtn.textContent = tr.versionBtnHide;
-      } else {
-        versionNote.classList.add("hidden");
-        versionBtn.textContent = tr.versionBtnShow;
-      }
-    });
+    fileInput.addEventListener('change', async () => {
+      if (fileInput.files && fileInput.files[0]) {
+        const file = fileInput.files[0];
+        fileNameLabel.textContent = file.name;
 
-    // --- BOTÓN PROBLEMAS / SUGERENCIAS ---
-    feedbackBtn.addEventListener("click", () => {
-      const tr = T[lang];
-      const subject = encodeURIComponent("[Analizador] Problemas / Sugerencias");
-      const body = encodeURIComponent(tr.emailBody);
-      window.location.href = `mailto:contacto@universitarios.info?subject=${subject}&body=${body}`;
-    });
-
-    // --- MANEJO DE ESTADO DE ANÁLISIS ---
-    function actualizarEstadoAnalisis(enEjecucion) {
-      const tr = T[lang];
-      analysisRunning = enEjecucion;
-
-      if (enEjecucion) {
-        statusDot.classList.add("running");
-        statusText.textContent = tr.statusAnalyzing;
-        analyzeBtn.disabled = true;
-        cancelBtn.disabled = false;
-      } else {
-        statusDot.classList.remove("running");
-        if (!hasResults) {
-          statusText.textContent = tr.statusReady;
+        try {
+          const text = await file.text();
+          const lines = text.split(/\r?\n/);
+          const domains = Array.from(new Set(
+            lines
+              .map(normalizeDomain)
+              .filter(d => d.length > 0)
+          ));
+          if (domains.length === 0) {
+            previewEl.style.display = 'block';
+            previewEl.textContent = I18N[currentLang].fileNoValid;
+          } else {
+            const previewList = domains.slice(0, 10).join('\n');
+            previewEl.style.display = 'block';
+            previewEl.textContent =
+              `Dominios detectados: ${domains.length}.` +
+              (domains.length > 10
+                ? ` Mostrando los primeros 10:\n` + previewList
+                : `\n` + previewList);
+          }
+        } catch (e) {
+          previewEl.style.display = 'block';
+          previewEl.textContent = I18N[currentLang].fileReadError;
         }
-        analyzeBtn.disabled = false;
-        cancelBtn.disabled = true;
+      } else {
+        fileNameLabel.textContent = I18N[currentLang].fileNone;
+        previewEl.style.display = 'none';
+        previewEl.textContent = '';
+      }
+    });
+
+    function log(msg, isHtml = false) {
+      if (!logEl.innerHTML) logEl.style.display = 'block';
+      if (isHtml) {
+        logEl.innerHTML += msg + '<br>';
+      } else {
+        const escaped = String(msg)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;');
+        logEl.innerHTML += escaped + '<br>';
+      }
+      logEl.scrollTop = logEl.scrollHeight;
+    }
+
+    function resetLog() {
+      logEl.innerHTML = '';
+      logEl.style.display = 'none';
+    }
+
+    function normalizeDomain(d) {
+      if (!d) return '';
+      let s = String(d).trim().toLowerCase();
+      if (!s) return '';
+
+      // cortar en el primer separador fuerte (; , espacio, tab)
+      s = s.split(/[;,\s]+/)[0];
+
+      // quitar esquema http(s)
+      s = s.replace(/^https?:\/\//, '');
+
+      // quitar ruta si existe
+      const slashIndex = s.indexOf('/');
+      if (slashIndex !== -1) {
+        s = s.slice(0, slashIndex);
       }
 
-      // Mientras se analiza, las descargas SIEMPRE deshabilitadas
-      // Cuando termina, solo se habilitan si hay resultados
-      downloadCsvBtn.disabled = enEjecucion || !hasResults;
-      downloadJsonBtn.disabled = enEjecucion || !hasResults;
+      // quitar comodín *.
+      if (s.startsWith('*.')) {
+        s = s.slice(2);
+      }
+
+      // quitar puntos iniciales redundantes y finales
+      s = s.replace(/^\.+/, '');
+      s = s.replace(/\.+$/, '');
+
+      return s;
     }
 
-    function resultadosPlaceholder(textHtml) {
-      const span = document.createElement("span");
-      span.className = "results-placeholder";
-      span.innerHTML = textHtml;
-      resultsBox.innerHTML = "";
-      resultsBox.appendChild(span);
+    async function analyzeDomain(domain) {
+      const base = '';
+
+      async function safeFetch(path) {
+        try {
+          const res = await fetch(base + path);
+          if (!res.ok) throw new Error('HTTP ' + res.status);
+          return await res.json();
+        } catch (e) {
+          return { error: e.message || 'error' };
+        }
+      }
+
+      const wwwDomain = domain.startsWith('www.') ? domain : 'www.' + domain;
+
+      const [
+        dnsrecords,
+        dnssecurity,
+        rpki,
+        emailconfig,
+        httpsecurity,
+        w3c,
+        headersMain,
+        headersWww
+      ] = await Promise.all([
+        safeFetch('/dnsrecords/' + encodeURIComponent(domain)),
+        safeFetch('/dnssecurity/' + encodeURIComponent(domain)),
+        safeFetch('/rpki/' + encodeURIComponent(domain)),
+        safeFetch('/emailconfig/' + encodeURIComponent(domain)),
+        safeFetch('/httpsecurity/' + encodeURIComponent(domain)),
+        safeFetch('/w3c/' + encodeURIComponent(domain)),
+        safeFetch('/headers/' + encodeURIComponent(domain)),
+        safeFetch('/headers/' + encodeURIComponent(wwwDomain))
+      ]);
+
+      const hasIPv4 = dnsrecords && dnsrecords.records &&
+                      Array.isArray(dnsrecords.records.A) &&
+                      dnsrecords.records.A.length > 0;
+
+      const hasIPv6 = dnsrecords && dnsrecords.records &&
+                      Array.isArray(dnsrecords.records.AAAA) &&
+                      dnsrecords.records.AAAA.length > 0;
+
+      const dnssecOK = dnssecurity && dnssecurity.valid === true;
+      const rpkiOK   = (rpki && rpki.state === 'valid') || (rpki && rpki.valid === true);
+
+      const spfOK   = emailconfig && emailconfig.spf === true;
+      const dmarcOK = emailconfig && emailconfig.dmarc === true;
+      const dkimOK  = emailconfig && emailconfig.dkim === true;
+
+      const httpOK = httpsecurity && httpsecurity.security &&
+                     (httpsecurity.security.hsts ||
+                      httpsecurity.security.csp ||
+                      httpsecurity.security.xfo ||
+                      httpsecurity.security.xcto ||
+                      httpsecurity.security.xxss);
+
+      let w3cOK = null;
+      if (w3c && typeof w3c.errors === 'number') {
+        w3cOK = w3c.errors === 0;
+      }
+
+      // Interpretar headers para HTTPS 200 y sitio funciona (dominio y www)
+      let anyHeaders = false;
+      let anyHttpsTrue = false;
+      let anySiteTrue = false;
+
+      function considerHeaders(h) {
+        if (!h || h.error) return;
+        anyHeaders = true;
+        if (h.https === true) anyHttpsTrue = true;
+        if (h.https === true || h.redirect === true) anySiteTrue = true;
+      }
+
+      considerHeaders(headersMain);
+      considerHeaders(headersWww);
+
+      let https200 = null;
+      let siteOK = null;
+      if (anyHeaders) {
+        https200 = anyHttpsTrue;
+        siteOK = anySiteTrue;
+      }
+
+      return {
+        domain,
+        hasIPv4,
+        hasIPv6,
+        dnssecOK,
+        rpkiOK,
+        spfOK,
+        dmarcOK,
+        dkimOK,
+        httpOK,
+        w3cOK,
+        https200,
+        siteOK
+      };
     }
 
-    // --- LÓGICA PRINCIPAL DE ANÁLISIS ---
-    analyzeBtn.addEventListener("click", () => {
-      const tr = T[lang];
-      const texto = inputText.value.trim();
-      if (!texto) {
-        alert(tr.alertNoText);
+    function resultCell(okValue) {
+      if (okValue === null || typeof okValue === 'undefined') {
+        return '<span class="warn">N/D</span>';
+      }
+      return okValue
+        ? '<span class="ok">OK</span>'
+        : '<span class="bad">No</span>';
+    }
+
+    function appendResultRow(result) {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${result.domain}</td>
+        <td>${resultCell(result.hasIPv4)}</td>
+        <td>${resultCell(result.hasIPv6)}</td>
+        <td>${resultCell(result.dnssecOK)}</td>
+        <td>${resultCell(result.rpkiOK)}</td>
+        <td>${resultCell(result.spfOK)}</td>
+        <td>${resultCell(result.dmarcOK)}</td>
+        <td>${resultCell(result.dkimOK)}</td>
+        <td>${resultCell(result.httpOK)}</td>
+        <td>${resultCell(result.w3cOK)}</td>
+        <td>${resultCell(result.https200)}</td>
+        <td>${resultCell(result.siteOK)}</td>
+      `;
+      resultsBody.appendChild(tr);
+    }
+
+    function setAnalyzingState(active) {
+      isAnalyzing = active;
+      runButton.disabled = active;
+      cancelButton.disabled = !active;
+      fileInput.disabled = active;
+      fileButton.disabled = active;
+      singleDomainInput.disabled = active;
+      if (downloadCsvButton) downloadCsvButton.disabled = active;
+      if (downloadJsonButton) downloadJsonButton.disabled = active;
+      progressWrapper.style.display = active ? 'block' : 'none';
+      if (!active) {
+        progressBar.style.width = '0%';
+        progressText.textContent = '';
+      }
+    }
+
+    function updateProgress(current, total) {
+      if (!total || total <= 0) return;
+      const pct = Math.round((current / total) * 100);
+      progressBar.style.width = pct + '%';
+      progressText.textContent = I18N[currentLang].progressText(current, total, pct);
+    }
+
+    function updateSummary() {
+      const total = allResults.length;
+      if (!total) {
+        summaryEl.style.display = 'none';
+        summaryTotalEl.textContent = '0';
+        summarySiteOkEl.textContent = '0 (0%)';
+        summaryIPv6El.textContent = '0 (0%)';
+        summaryDMARCEl.textContent = '0 (0%)';
+        return;
+      }
+      let siteOkCount = 0;
+      let ipv6Count = 0;
+      let dmarcCount = 0;
+
+      for (const r of allResults) {
+        if (r.siteOK === true) siteOkCount++;
+        if (r.hasIPv6 === true) ipv6Count++;
+        if (r.dmarcOK === true) dmarcCount++;
+      }
+
+      function pct(count) {
+        return Math.round((count / total) * 100);
+      }
+
+      summaryEl.style.display = 'block';
+      summaryTotalEl.textContent = String(total);
+      summarySiteOkEl.textContent = `${siteOkCount} (${pct(siteOkCount)}%)`;
+      summaryIPv6El.textContent = `${ipv6Count} (${pct(ipv6Count)}%)`;
+      summaryDMARCEl.textContent = `${dmarcCount} (${pct(dmarcCount)}%)`;
+    }
+
+    function applyFilters() {
+      const noIPv4 = filterNoIPv4.checked;
+      const siteProblem = filterSiteProblem.checked;
+      const noDMARC = filterNoDMARC.checked;
+
+      const rows = resultsBody.querySelectorAll('tr');
+      rows.forEach((tr, idx) => {
+        const r = allResults[idx];
+        if (!r) {
+          tr.style.display = '';
+          return;
+        }
+        let visible = true;
+        if (noIPv4 && r.hasIPv4 !== false) visible = false;
+        if (siteProblem && !(r.siteOK === false)) visible = false;
+        if (noDMARC && r.dmarcOK !== false) visible = false;
+        tr.style.display = visible ? '' : 'none';
+      });
+    }
+
+    filterNoIPv4.addEventListener('change', applyFilters);
+    filterSiteProblem.addEventListener('change', applyFilters);
+    filterNoDMARC.addEventListener('change', applyFilters);
+
+    runButton.addEventListener('click', async () => {
+      if (isAnalyzing) return;
+
+      statusEl.textContent = '';
+      resetLog();
+      resultsBody.innerHTML = '';
+      allResults = [];
+      cancelRequested = false;
+      updateSummary();
+      applyFilters();
+      previewEl.style.display = 'none';
+      previewEl.textContent = '';
+
+      const single = normalizeDomain(singleDomainInput.value);
+      const file = fileInput.files[0];
+
+      let domains = [];
+
+      if (file) {
+        const text = await file.text();
+        domains = text
+          .split(/\r?\n/)
+          .map(normalizeDomain)
+          .filter(d => d.length > 0);
+      } else if (single) {
+        domains = [single];
+      } else {
+        statusEl.textContent = I18N[currentLang].statusNoInput;
         return;
       }
 
-      // Si ya hay un análisis en curso, lo cancelamos genéricamente
-      if (analysisRunning && analysisTimeoutId !== null) {
-        clearTimeout(analysisTimeoutId);
-        analysisTimeoutId = null;
-        hasResults = false;
-        currentAnalysisData = null;
-        statusText.innerHTML = tr.statusCanceled;
-        resultadosPlaceholder(tr.statusCanceled);
-        actualizarEstadoAnalisis(false);
-      }
+      domains = Array.from(new Set(domains));
 
-      // Limpiar resultados previos antes del nuevo análisis
-      hasResults = false;
-      currentAnalysisData = null;
-      resultadosPlaceholder(tr.statusAnalyzing);
-
-      actualizarEstadoAnalisis(true);
-
-      // Simulación de análisis: reemplaza este setTimeout por tu llamada real
-      analysisTimeoutId = setTimeout(() => {
-        // EJEMPLO DE RESULTADO DE MUESTRA (reemplaza por tu lógica real)
-        const resultadoEjemplo = {
-          resumen: lang === "es" ? "Análisis de ejemplo completado." : "Sample analysis completed.",
-          longitudTexto: texto.length,
-          vistaPrevia: texto.slice(0, 200)
-        };
-
-        onAnalysisFinished(resultadoEjemplo);
-      }, 1500);
-    });
-
-    function onAnalysisFinished(data) {
-      const tr = T[lang];
-      analysisTimeoutId = null;
-      // Guardar el resultado estructurado para CSV/JSON
-      currentAnalysisData = data;
-      hasResults = true;
-
-      // Mostrar de forma legible en pantalla (ajusta según tu análisis real)
-      resultsBox.innerHTML = "";
-      const resumen = document.createElement("div");
-      resumen.innerHTML =
-        "<strong>" + tr.resumenLabel + "</strong> " + (data.resumen || (lang === "es" ? "Sin resumen" : "No summary")) + "<br><br>" +
-        "<strong>" + tr.lenLabel + "</strong> " + (data.longitudTexto ?? "N/D") + "<br><br>" +
-        "<strong>" + tr.previewLabel + "</strong><br>" +
-        "<pre style='white-space:pre-wrap; font-size:0.8rem; margin-top:0.25rem;'>" +
-        (data.vistaPrevia || (lang === "es" ? "(Sin vista previa)" : "(No preview)")) +
-        "</pre>";
-
-      resultsBox.appendChild(resumen);
-
-      // Termina el estado de análisis y habilita descargas
-      actualizarEstadoAnalisis(false);
-    }
-
-    // --- CANCELAR ANÁLISIS POR EL USUARIO ---
-    cancelBtn.addEventListener("click", () => {
-      const tr = T[lang];
-      if (analysisRunning && analysisTimeoutId !== null) {
-        clearTimeout(analysisTimeoutId);
-        analysisTimeoutId = null;
-        analysisRunning = false;
-        hasResults = false;
-        currentAnalysisData = null;
-
-        statusText.innerHTML = tr.statusCanceledUser;
-        resultadosPlaceholder(tr.statusCanceledUser);
-
-        actualizarEstadoAnalisis(false);
-      }
-    });
-
-    // --- DESCARGA CSV ---
-    downloadCsvBtn.addEventListener("click", () => {
-      if (!hasResults || !currentAnalysisData) {
-        const tr = T[lang];
-        alert(tr.alertNoText);
+      if (!domains.length) {
+        statusEl.textContent = I18N[currentLang].statusNoValidAfterClean;
         return;
       }
 
-      // Convierte el objeto actual a un CSV simple (clave, valor)
-      const filas = [["campo", "valor"]];
-      for (const [clave, valor] of Object.entries(currentAnalysisData)) {
-        const limpio = String(valor).replace(/\r?\n/g, " ");
-        filas.push([clave, limpio]);
+      statusEl.textContent = I18N[currentLang].statusAnalyzing(domains.length);
+      setAnalyzingState(true);
+
+      for (let i = 0; i < domains.length; i++) {
+        if (cancelRequested) {
+          log(I18N[currentLang].logCancelUserHtml, true);
+          break;
+        }
+        const d = domains[i];
+        log(currentLang === 'es' ? `▶ Analizando ${d} (${i + 1}/${domains.length})...` : `▶ Checking ${d} (${i + 1}/${domains.length})...`);
+        updateProgress(i, domains.length);
+        try {
+          const result = await analyzeDomain(d);
+          appendResultRow(result);
+          allResults.push(result);
+          log(currentLang === 'es' ? `✔ Listo ${d}` : `✔ Done ${d}`);
+        } catch (e) {
+          log(currentLang === 'es' ? `✖ Error en ${d}: ${e.message || e}` : `✖ Error on ${d}: ${e.message || e}`);
+          const emptyResult = {
+            domain: d,
+            hasIPv4: null,
+            hasIPv6: null,
+            dnssecOK: null,
+            rpkiOK: null,
+            spfOK: null,
+            dmarcOK: null,
+            dkimOK: null,
+            httpOK: null,
+            w3cOK: null,
+            https200: null,
+            siteOK: null
+          };
+          appendResultRow(emptyResult);
+          allResults.push(emptyResult);
+        }
       }
 
-      const csvContenido = filas
-        .map(row => row.map(v => '"' + v.replace(/"/g, '""') + '"').join(","))
-        .join("\r\n");
+      updateProgress(domains.length, domains.length);
+      updateSummary();
+      applyFilters();
 
-      descargarArchivo("analisis.csv", csvContenido, "text/csv;charset=utf-8;");
+      if (cancelRequested) {
+        statusEl.innerHTML = '<strong>' + I18N[currentLang].statusCanceled + '</strong>';
+      } else {
+        statusEl.textContent = I18N[currentLang].statusCompleted;
+      }
+
+      // Limpia el archivo para evitar reusar el mismo listado sin querer
+      fileInput.value = '';
+      fileNameLabel.textContent = I18N[currentLang].fileNone;
+      setAnalyzingState(false);
+      cancelRequested = false;
     });
 
-    // --- DESCARGA JSON ---
-    downloadJsonBtn.addEventListener("click", () => {
-      if (!hasResults || !currentAnalysisData) {
-        const tr = T[lang];
-        alert(tr.alertNoText);
+    cancelButton.addEventListener('click', () => {
+      if (!isAnalyzing) return;
+      confirmOverlay.style.display = 'flex';
+    });
+
+    confirmCancelContinue.addEventListener('click', () => {
+      confirmOverlay.style.display = 'none';
+    });
+
+    confirmCancelYes.addEventListener('click', () => {
+      cancelRequested = true;
+      confirmOverlay.style.display = 'none';
+      // limpia el archivo cargado para permitir un nuevo análisis inmediato
+      fileInput.value = '';
+      fileNameLabel.textContent = I18N[currentLang].fileNone;
+    });
+
+    downloadCsvButton.addEventListener('click', () => {
+      if (!allResults.length) {
+        alert(I18N[currentLang].noResultsExport);
         return;
       }
+      const header = [
+        'Dominio',
+        'IPv4',
+        'IPv6',
+        'DNSSEC',
+        'RPKI',
+        'SPF',
+        'DMARC',
+        'DKIM',
+        'HTTP_sec',
+        'W3C',
+        'HTTPS_200',
+        'Sitio_funciona'
+      ];
+      const rows = [header.join(',')];
 
-      const jsonContenido = JSON.stringify(currentAnalysisData, null, 2);
-      descargarArchivo("analisis.json", jsonContenido, "application/json;charset=utf-8;");
-    });
+      function val(v) {
+        if (v === null || typeof v === 'undefined') return 'N/D';
+        return v ? 'OK' : 'No';
+      }
 
-    function descargarArchivo(nombre, contenido, tipo) {
-      const blob = new Blob([contenido], { type: tipo });
+      for (const r of allResults) {
+        rows.push([
+          r.domain,
+          val(r.hasIPv4),
+          val(r.hasIPv6),
+          val(r.dnssecOK),
+          val(r.rpkiOK),
+          val(r.spfOK),
+          val(r.dmarcOK),
+          val(r.dkimOK),
+          val(r.httpOK),
+          r.w3cOK === null || typeof r.w3cOK === 'undefined'
+            ? 'N/D'
+            : r.w3cOK
+            ? 'OK'
+            : 'No',
+          val(r.https200),
+          val(r.siteOK)
+        ].join(','));
+      }
+
+      const csvContent = rows.join('\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
+      const a = document.createElement('a');
       a.href = url;
-      a.download = nombre;
+      a.download = 'mediciones_isoc_lac.csv';
       document.body.appendChild(a);
       a.click();
-      a.remove();
+      document.body.removeChild(a);
       URL.revokeObjectURL(url);
+    });
+
+    downloadJsonButton.addEventListener('click', () => {
+      if (!allResults.length) {
+        alert(I18N[currentLang].noResultsExport);
+        return;
+      }
+      const jsonContent = JSON.stringify(allResults, null, 2);
+      const blob = new Blob([jsonContent], { type: 'application/json;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'mediciones_isoc_lac.json';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    });
+
+    // Toggle nota versión experimental con i18n
+    if (toggleNoteBtn && noteBox) {
+      noteBox.style.display = 'none';
+      toggleNoteBtn.addEventListener('click', () => {
+        const isHidden = noteBox.style.display === '' || noteBox.style.display === 'none';
+        noteBox.style.display = isHidden ? 'block' : 'none';
+        const t = I18N[currentLang];
+        toggleNoteBtn.textContent = isHidden ? t.noteToggleMore : t.noteToggleLess;
+      });
     }
 
-    // Estado inicial correcto: análisis parado, sin resultados => descargas deshabilitadas
-    actualizarEstadoAnalisis(false);
-    hasResults = false;
-    downloadCsvBtn.disabled = true;
-    downloadJsonBtn.disabled = true;
-
-    // Aplicar idioma inicial
-    applyLang();
   </script>
-</body>
-</html>
